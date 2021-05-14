@@ -1,0 +1,15 @@
+provider:
+  # https://docs.aws.amazon.com/polly/latest/dg/setting-up.html
+  access_key_id: "access key id from you AWS account"
+  secret_access_key: "secret key from aws account"
+  region: "AWS region e.g.: 'us-west-2'. Note that only in some regions the 'neural' speech generation option is available"
+
+voice_engine:
+  # see https://docs.aws.amazon.com/polly/latest/dg/voicelist.html
+  voice_id: "Joanna"
+
+  # See https://docs.aws.amazon.com/polly/latest/dg/NTTS-main.html
+  engine: "neural"
+
+  # See https://docs.aws.amazon.com/polly/latest/dg/ntts-speakingstyles.html
+  speech_style: "conversational"
