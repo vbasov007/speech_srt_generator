@@ -21,6 +21,8 @@ class AwsSpeechSynthesizer:
 
         ssml = text_to_ssml(text, )
 
+        print(ssml)
+
         if mp3_out is not None:
             response = self.client.synthesize_speech(Engine=self.engine,
                                                      VoiceId=self.voice_id,
