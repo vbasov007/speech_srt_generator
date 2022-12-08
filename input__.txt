@@ -1,0 +1,46 @@
+#ru
+Переведи с немецкого на русский, вместе с артиклями der, die, das
+#1000
+#dt
+Der Mann > Мужчина. Муж.
+Die Frau > Женщина. Жена.
+Der Junge > Мальчик.
+Das Mädchen > Девочка.
+Das Kind > Ребенок.
+Der Vater > Отец.
+Die Mutter > Мать.
+Der Opa > Дедушка.
+Die Oma > Бабушка.
+Der Bruder > Брат.
+Die Schwester > Сестра
+
+#ru
+Переведи с русского на немецкий
+#
+#1000
+#rt
+Der Mann > Мужчина. Муж.
+Die Frau > Женщина. Жена.
+Der Junge > Мальчик.
+Das Mädchen > Девочка.
+Das Kind > Ребенок.
+Der Vater > Отец.
+Die Mutter > Мать.
+Der Opa > Дедушка.
+Die Oma > Бабушка.
+Der Bruder > Брат.
+Die Schwester > Сестра
+
+#ru
+Прочти слова
+#
+#rw
+Ich, mich, dich, wichtig, richtig, wirklich.
+Er, wer, wir, hier, ihr, mir, dir, sicher.
+
+#1000
+#rp
+Der Tisch, das Dach, Die Tasche, Die Tür,
+die Nummer, die Nacht, nein, nicht.
+Hamburg, hier, Halle, hoch, Hallo.
+Er, wer, sehr, der, Herr, mehr.

@@ -17,7 +17,7 @@ from collections import namedtuple
 from aws_speech_synthesizer import AwsSpeechSynthesizer
 
 ProviderConfig = namedtuple('ProviderConfig', ['access_key_id', 'secret_access_key', 'region'])
-EngineConfig = namedtuple('EngineConfig', ['engine', 'voice_id', 'speech_style'])
+EngineConfig = namedtuple('EngineConfig', ['engine', 'voice_id', 'speech_style', 'language_code'])
 
 
 class ArgsParser:
@@ -44,7 +44,8 @@ class ArgsParser:
         c = self._config()['voice_engine']
         return EngineConfig(engine=c.get('engine', 'standard'),
                             voice_id=c.get('voice_id', 'Joanna'),
-                            speech_style=c.get('speech_style', None))
+                            speech_style=c.get('speech_style', None),
+                            language_code=c.get('language_code', 'en-EN'))
 
     @property
     def output_folder(self):
@@ -55,7 +56,7 @@ class ArgsParser:
 
     @property
     def input_text(self):
-        with open(self.args.get('--input'), 'r') as text:
+        with open(self.args.get('--input'), encoding='utf-8', mode='r') as text:
             return str(text.read())
 
     @property
@@ -76,12 +77,13 @@ def main():
                                  engine=cfg.engine.engine,
                                  voice_id=cfg.engine.voice_id,
                                  speech_style=cfg.engine.speech_style,
+                                 language_code=cfg.engine.language_code,
                                  )
 
     if not os.path.exists(cfg.output_folder):
         os.makedirs(cfg.output_folder)
 
-    with open(cfg.mp3_file_path, 'wb') as mp3_out, open(cfg.srt_file_path, 'w') as srt_out:
+    with open(cfg.mp3_file_path, 'wb') as mp3_out, open(cfg.srt_file_path, 'w', encoding='utf-8') as srt_out:
         synth.synthesize(text=cfg.input_text, mp3_out=mp3_out, srt_out=srt_out)
 
 

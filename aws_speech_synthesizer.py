@@ -1,6 +1,6 @@
 import json
 import boto3
-from utils import text_to_ssml, speech_marks_to_srt
+from utils import text_to_ssml, speech_marks_to_srt, text_to_ssml_advanced
 
 
 class AwsSpeechSynthesizer:
@@ -11,6 +11,7 @@ class AwsSpeechSynthesizer:
         self.secret_access_key = kwargs.get('secret_access_key', '')
         self.region_name = kwargs.get('region_name', '')
         self.speech_style = kwargs.get('speech_style', None)
+        self.language_code = kwargs.get('language_code', 'en-US')
 
         session = boto3.Session(aws_access_key_id=self.access_key_id,
                                 aws_secret_access_key=self.secret_access_key,
@@ -19,7 +20,7 @@ class AwsSpeechSynthesizer:
 
     def synthesize(self, text, mp3_out=None, srt_out=None):
 
-        ssml = text_to_ssml(text, )
+        ssml = text_to_ssml_advanced(text)
 
         print(ssml)
 
@@ -28,9 +29,11 @@ class AwsSpeechSynthesizer:
                                                      VoiceId=self.voice_id,
                                                      OutputFormat='mp3',
                                                      TextType='ssml',
+                                                     LanguageCode = self.language_code,
                                                      Text=ssml
                                                      )
             mp3_out.write(response['AudioStream'].read())
+
 
         if srt_out is not None:
             response = self.client.synthesize_speech(Engine=self.engine,
@@ -38,6 +41,7 @@ class AwsSpeechSynthesizer:
                                                      OutputFormat='json',
                                                      SpeechMarkTypes=['sentence'],
                                                      TextType='ssml',
+                                                     LanguageCode=self.language_code,
                                                      Text=ssml
                                                      )
 
