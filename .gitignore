@@ -1,9 +1,8 @@
 .idea/
 __pycache__/
 output/ 
-venv/ 
-config.yaml
+venv/
 build/
 dist/
 output/
-
+setup_secrets.cmd

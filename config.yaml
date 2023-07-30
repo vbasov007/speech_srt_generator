@@ -1,0 +1,16 @@
+provider:
+  # https://docs.aws.amazon.com/polly/latest/dg/setting-up.html
+#  access_key_id: "your-access-key-id" or set as environment variable polly_key_id
+#  secret_access_key: "your-secret-access-key" or set as environment variable polly_secret_key
+  region: "us-west-2"
+
+voice_engine:
+  # see https://docs.aws.amazon.com/polly/latest/dg/voicelist.html
+  voice_id: "Joanna"
+  # voice_id: "Matthew"
+
+  # See https://docs.aws.amazon.com/polly/latest/dg/NTTS-main.html
+  engine: "neural"
+
+  # See https://docs.aws.amazon.com/polly/latest/dg/ntts-speakingstyles.html
+  speech_style: "conversational"

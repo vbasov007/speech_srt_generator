@@ -36,9 +36,13 @@ class ArgsParser:
 
     @property
     def provider(self):
-        c = self._config()['provider']
-        return ProviderConfig(access_key_id=c['access_key_id'],
-                              secret_access_key=c['secret_access_key'],
+        c = self._config().get('provider')
+
+        access_key_id = c.get('access_key_id', os.environ.get('polly_key_id'))
+        secret_access_key = c.get('secret_access_key', os.environ.get('polly_secret_key'))
+
+        return ProviderConfig(access_key_id=access_key_id,
+                              secret_access_key=secret_access_key,
                               region=c['region'])
 
     @property
