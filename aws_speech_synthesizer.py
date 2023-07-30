@@ -1,6 +1,6 @@
 import json
 import boto3
-from utils import text_to_ssml, speech_marks_to_srt, text_to_ssml_advanced
+from utils import speech_marks_to_srt, text_to_ssml_advanced
 
 
 class AwsSpeechSynthesizer:

@@ -1,0 +1,16 @@
+provider:
+  # https://docs.aws.amazon.com/polly/latest/dg/setting-up.html
+  access_key_id: "AKIA6CPYEK2TT4G3TNHG"
+  secret_access_key: "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"
+  region: "us-west-2"
+
+voice_engine:
+  # see https://docs.aws.amazon.com/polly/latest/dg/voicelist.html
+  voice_id: "Joanna"
+  # voice_id: "Matthew"
+
+  # See https://docs.aws.amazon.com/polly/latest/dg/NTTS-main.html
+  engine: "neural"
+
+  # See https://docs.aws.amazon.com/polly/latest/dg/ntts-speakingstyles.html
+  speech_style: "conversational"

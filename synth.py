@@ -10,10 +10,12 @@ Options:
   -f --out_folder=DATA_FOLDER           [default: output]
 """
 
-import docopt
-import yaml
 import os
 from collections import namedtuple
+
+import docopt
+import yaml
+
 from aws_speech_synthesizer import AwsSpeechSynthesizer
 
 ProviderConfig = namedtuple('ProviderConfig', ['access_key_id', 'secret_access_key', 'region'])
@@ -45,7 +47,7 @@ class ArgsParser:
         return EngineConfig(engine=c.get('engine', 'standard'),
                             voice_id=c.get('voice_id', 'Joanna'),
                             speech_style=c.get('speech_style', None),
-                            language_code=c.get('language_code', 'en-EN'))
+                            language_code=c.get('language_code', 'en-US'))
 
     @property
     def output_folder(self):
@@ -68,23 +70,42 @@ class ArgsParser:
         return self._path(self.args.get('--mp3'))
 
 
-def main():
-    cfg = ArgsParser(docopt.docopt(__doc__))
+def converter(args, text=None, output_folder=None, mp3_file=None, srt_file=None, voice_id=None, language_code=None):
+    cfg = ArgsParser(args)
+
+    voice_id = cfg.engine.voice_id if voice_id is None else voice_id
+    language_code = cfg.engine.language_code if language_code is None else language_code
 
     synth = AwsSpeechSynthesizer(access_key_id=cfg.provider.access_key_id,
                                  secret_access_key=cfg.provider.secret_access_key,
                                  region_name=cfg.provider.region,
                                  engine=cfg.engine.engine,
-                                 voice_id=cfg.engine.voice_id,
+                                 voice_id=voice_id,
                                  speech_style=cfg.engine.speech_style,
-                                 language_code=cfg.engine.language_code,
+                                 language_code=language_code,
                                  )
 
-    if not os.path.exists(cfg.output_folder):
-        os.makedirs(cfg.output_folder)
+    output_folder = cfg.output_folder if output_folder is None else output_folder
+    mp3_file_path = cfg.mp3_file_path if mp3_file is None else os.path.join(output_folder, mp3_file)
+    srt_file_path = cfg.srt_file_path if srt_file is None else os.path.join(output_folder, srt_file)
 
-    with open(cfg.mp3_file_path, 'wb') as mp3_out, open(cfg.srt_file_path, 'w', encoding='utf-8') as srt_out:
-        synth.synthesize(text=cfg.input_text, mp3_out=mp3_out, srt_out=srt_out)
+
+    if text is not None:
+        input_text = text
+    else:
+        input_text = cfg.input_text
+
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    with open(mp3_file_path, 'wb') as mp3_out, open(srt_file_path, 'w', encoding='utf-8') as srt_out:
+        synth.synthesize(text=input_text, mp3_out=mp3_out, srt_out=srt_out)
+
+
+def main():
+    args = docopt.docopt(__doc__)
+    print(args)
+    converter(args)
 
 
 if __name__ == '__main__':
