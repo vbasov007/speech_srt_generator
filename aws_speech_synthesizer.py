@@ -1,6 +1,8 @@
 import json
+
 import boto3
-from utils import speech_marks_to_srt, text_to_ssml_advanced
+
+from utils import speech_marks_to_srt, text_to_ssml
 
 
 class AwsSpeechSynthesizer:
@@ -20,7 +22,7 @@ class AwsSpeechSynthesizer:
 
     def synthesize(self, text, mp3_out=None, srt_out=None):
 
-        ssml = text_to_ssml_advanced(text)
+        ssml = text_to_ssml(text)
 
         print(ssml)
 
@@ -29,11 +31,10 @@ class AwsSpeechSynthesizer:
                                                      VoiceId=self.voice_id,
                                                      OutputFormat='mp3',
                                                      TextType='ssml',
-                                                     LanguageCode = self.language_code,
+                                                     LanguageCode=self.language_code,
                                                      Text=ssml
                                                      )
             mp3_out.write(response['AudioStream'].read())
-
 
         if srt_out is not None:
             response = self.client.synthesize_speech(Engine=self.engine,
@@ -49,3 +50,19 @@ class AwsSpeechSynthesizer:
             speech_marks_list = [json.loads(r) for r in sm_json if len(r) > 2]
             srt = speech_marks_to_srt(speech_marks_list)
             srt_out.write(srt)
+
+    def each_line_start_time(self, text):
+        ssml = text_to_ssml(text)
+
+        response = self.client.synthesize_speech(Engine=self.engine,
+                                                 VoiceId=self.voice_id,
+                                                 OutputFormat='json',
+                                                 SpeechMarkTypes=['sentence'],
+                                                 TextType='ssml',
+                                                 LanguageCode=self.language_code,
+                                                 Text=ssml
+                                                 )
+
+        sm_json = response['AudioStream'].read().decode('utf-8').split('\n')
+        line_starts = [json.loads(r)['time'] for r in sm_json if len(r) > 2 and json.loads(r)['type'] == 'sentence']
+        return line_starts
