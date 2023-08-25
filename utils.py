@@ -72,3 +72,5 @@ def speech_marks_to_srt(speech_marks: list) -> str:
         res += cur_text + '\n\n'
 
     return res
+
+

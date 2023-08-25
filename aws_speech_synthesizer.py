@@ -30,10 +30,12 @@ class AwsSpeechSynthesizer:
             response = self.client.synthesize_speech(Engine=self.engine,
                                                      VoiceId=self.voice_id,
                                                      OutputFormat='mp3',
+                                                     SampleRate='24000',
                                                      TextType='ssml',
                                                      LanguageCode=self.language_code,
                                                      Text=ssml
                                                      )
+
             mp3_out.write(response['AudioStream'].read())
 
         if srt_out is not None:

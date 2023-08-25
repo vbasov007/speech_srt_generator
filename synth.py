@@ -16,6 +16,8 @@ from collections import namedtuple
 import docopt
 import yaml
 
+import codecs
+
 from aws_speech_synthesizer import AwsSpeechSynthesizer
 
 ProviderConfig = namedtuple('ProviderConfig', ['access_key_id', 'secret_access_key', 'region'])
@@ -103,6 +105,7 @@ def converter(args, text=None, output_folder=None, mp3_file=None, srt_file=None,
         os.makedirs(output_folder)
 
     with open(mp3_file_path, 'wb') as mp3_out, open(srt_file_path, 'w', encoding='utf-8') as srt_out:
+        srt_out.write(codecs.BOM_UTF8.decode('utf-8'))
         synth.synthesize(text=input_text, mp3_out=mp3_out, srt_out=srt_out)
 
 
