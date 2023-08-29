@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Converter Error</title>
+</head>
+<body>
+{% if error %}
+    <h1>Unhandled convertor error:</h1>
+ {{error}}
+{% endif %}
+{% if lines %}
+    <h1>Error in lines. Probably incorrect ssml.</h1>
+    <ul>
+        {% for line in lines %}
+            <li>{{line}}</li>
+        {% endfor %}
+    </ul>
+<h2>Click BACK button in browser and fix the text input.</h2>
+{% endif %}
+</body>
+</html>

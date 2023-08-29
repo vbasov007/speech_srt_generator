@@ -1,9 +1,9 @@
 import datetime
 import os
+import threading
 import time
 import uuid
 import zipfile
-import threading
 
 from flask import Flask, render_template, request, send_file
 
@@ -59,8 +59,15 @@ def home():
         voice_id = request.form.get('voice')
         print(f'Language: {language_code}, Voice: {voice_id}')
         # Call the convert function passing the form data
-        converter(args, text, output_folder=folder, mp3_file=f'{uid}.mp3', srt_file=f'{uid}.srt',
-                  voice_id=voice_id, language_code=language_code)
+        try:
+            error_log = converter(args, text, output_folder=folder, mp3_file=f'{uid}.mp3', srt_file=f'{uid}.srt',
+                                  voice_id=voice_id, language_code=language_code)
+        except Exception:
+            import traceback
+            return render_template('error.html', error=traceback.format_exc(), lines=[])
+
+        if error_log:
+            return render_template('error.html', lines=error_log, error=None)
 
         create_zip_file(temp_zip, [temp_mp3, temp_srt], ['res.mp3', 'res.srt'])
 

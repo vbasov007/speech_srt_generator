@@ -20,6 +20,8 @@ import codecs
 
 from aws_speech_synthesizer import AwsSpeechSynthesizer
 
+from text2lines import text2lines, lines2ssml
+
 ProviderConfig = namedtuple('ProviderConfig', ['access_key_id', 'secret_access_key', 'region'])
 EngineConfig = namedtuple('EngineConfig', ['engine', 'voice_id', 'speech_style', 'language_code'])
 
@@ -79,6 +81,8 @@ class ArgsParser:
 def converter(args, text=None, output_folder=None, mp3_file=None, srt_file=None, voice_id=None, language_code=None):
     cfg = ArgsParser(args)
 
+    error_log = []
+
     voice_id = cfg.engine.voice_id if voice_id is None else voice_id
     language_code = cfg.engine.language_code if language_code is None else language_code
 
@@ -105,8 +109,22 @@ def converter(args, text=None, output_folder=None, mp3_file=None, srt_file=None,
         os.makedirs(output_folder)
 
     with open(mp3_file_path, 'wb') as mp3_out, open(srt_file_path, 'w', encoding='utf-8') as srt_out:
+        lines = text2lines(input_text)
+
+        for line in lines:
+            if line.type == 'sentence':
+                try:
+                    line.duration = synth.duration(line.value)
+                    print(f'{line.value} - {line.duration}')
+                except Exception:
+                    error_log.append(f'{line.value}')
+
+        if error_log:
+            return error_log
+
+        ssml = lines2ssml(lines)
         srt_out.write(codecs.BOM_UTF8.decode('utf-8'))
-        synth.synthesize(text=input_text, mp3_out=mp3_out, srt_out=srt_out)
+        synth.synthesize(text=ssml, mp3_out=mp3_out, srt_out=srt_out, ssml_input=True)
 
 
 def main():

@@ -50,7 +50,7 @@ def tf(delta_ms: int) -> str:
     return (tz + delta).strftime("%H:%M:%S,%f")[:-3]
 
 
-def speech_marks_to_srt(speech_marks: list) -> str:
+def speech_marks_to_srt(speech_marks: list, remove_tags=True) -> str:
     """
     Convert speech marks to SRT subtitles
     The speech marks is a list of dict: [{'time': TIME_MS, 'type': 'sentence', 'value': SOME_TEXT}, {...},..]
@@ -69,8 +69,17 @@ def speech_marks_to_srt(speech_marks: list) -> str:
 
         res += str(index + 1) + '\n'
         res += f'{tf(cur_time)} --> {tf(end_time)}\n'
+        cur_text = remove_all_tags(cur_text) if remove_tags else cur_text
         res += cur_text + '\n\n'
 
     return res
 
 
+def remove_all_tags(text):
+    # Define regex pattern to match HTML tags
+    pattern = re.compile(r'<.*?>')
+
+    # Remove HTML tags using the pattern
+    filtered_text = re.sub(pattern, '', text)
+
+    return filtered_text

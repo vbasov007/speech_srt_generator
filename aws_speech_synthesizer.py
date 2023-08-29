@@ -2,7 +2,7 @@ import json
 
 import boto3
 
-from utils import speech_marks_to_srt, text_to_ssml
+from utils import speech_marks_to_srt, text_to_ssml, remove_all_tags
 
 
 class AwsSpeechSynthesizer:
@@ -20,51 +20,45 @@ class AwsSpeechSynthesizer:
                                 region_name=self.region_name)
         self.client = session.client('polly')
 
-    def synthesize(self, text, mp3_out=None, srt_out=None):
-
-        ssml = text_to_ssml(text)
-
-        print(ssml)
-
-        if mp3_out is not None:
-            response = self.client.synthesize_speech(Engine=self.engine,
-                                                     VoiceId=self.voice_id,
-                                                     OutputFormat='mp3',
-                                                     SampleRate='24000',
-                                                     TextType='ssml',
-                                                     LanguageCode=self.language_code,
-                                                     Text=ssml
-                                                     )
-
-            mp3_out.write(response['AudioStream'].read())
-
-        if srt_out is not None:
-            response = self.client.synthesize_speech(Engine=self.engine,
-                                                     VoiceId=self.voice_id,
-                                                     OutputFormat='json',
-                                                     SpeechMarkTypes=['sentence'],
-                                                     TextType='ssml',
-                                                     LanguageCode=self.language_code,
-                                                     Text=ssml
-                                                     )
-
-            sm_json = response['AudioStream'].read().decode('utf-8').split('\n')
-            speech_marks_list = [json.loads(r) for r in sm_json if len(r) > 2]
-            srt = speech_marks_to_srt(speech_marks_list)
-            srt_out.write(srt)
-
-    def each_line_start_time(self, text):
-        ssml = text_to_ssml(text)
-
+    def synth_mp3(self, ssml):
         response = self.client.synthesize_speech(Engine=self.engine,
                                                  VoiceId=self.voice_id,
-                                                 OutputFormat='json',
-                                                 SpeechMarkTypes=['sentence'],
+                                                 OutputFormat='mp3',
+                                                 SampleRate='24000',
                                                  TextType='ssml',
                                                  LanguageCode=self.language_code,
                                                  Text=ssml
                                                  )
+        return response['AudioStream'].read()
 
+    def synth_speech_marks(self, ssml):
+        response = self.client.synthesize_speech(Engine=self.engine,
+                                                 VoiceId=self.voice_id,
+                                                 OutputFormat='json',
+                                                 SpeechMarkTypes=['sentence', 'ssml'],
+                                                 TextType='ssml',
+                                                 LanguageCode=self.language_code,
+                                                 Text=ssml
+                                                 )
         sm_json = response['AudioStream'].read().decode('utf-8').split('\n')
-        line_starts = [json.loads(r)['time'] for r in sm_json if len(r) > 2 and json.loads(r)['type'] == 'sentence']
-        return line_starts
+        speech_marks_list = [json.loads(r) for r in sm_json if r != '']
+        return speech_marks_list
+
+    def synthesize(self, text, mp3_out=None, srt_out=None, ssml_input=False):
+
+        ssml = text if ssml_input else text_to_ssml(text)
+
+        if mp3_out is not None:
+            response = self.synth_mp3(ssml)
+            mp3_out.write(response)
+
+        if srt_out is not None:
+            srt = speech_marks_to_srt(self.synth_speech_marks(ssml), srt_out)
+            srt_out.write(srt)
+
+    def duration(self, frase):
+        speech_marks = self.synth_speech_marks(f'<speak> {frase} <mark name="end"/></speak>')
+        for sm in speech_marks:
+            if sm['type'] == 'ssml' and sm['value'] == 'end':
+                return int(sm['time'])
+        return None
