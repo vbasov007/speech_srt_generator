@@ -5,9 +5,10 @@ import time
 import uuid
 import zipfile
 
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, jsonify
 
-from synth import converter
+from mp3_srt_synth import Mp3SrtSynth
+from multilang import split_translations, add_translation, present_translations
 
 app = Flask(__name__)
 
@@ -45,40 +46,108 @@ def remove_files_after_completion(file_paths: list, delay: int = 5, repeat: int 
                 not_deleted.remove(f)
 
 
+from flask import send_from_directory
+
+
+@app.route('/help')
+def show_help():
+    return send_from_directory('templates', 'help.html')
+
+
 @app.route('/', methods=['GET', 'POST'])
 def home():
     folder = 'output'
     uid = uuid.uuid4()
-    temp_mp3 = os.path.join(folder, f'{uid}.mp3')
-    temp_srt = os.path.join(folder, f'{uid}.srt')
     temp_zip = os.path.join(folder, f'{uid}.zip')
-
+    voices = Mp3SrtSynth.voices
+    supported_langs = Mp3SrtSynth.lang_code_to_name
     if request.method == 'POST':
+        if request.form.get('reset'):
+            return render_template('index.html', text='',
+                                   present_langs=['EN', ],
+                                   orig_lang="EN",
+                                   voices=voices,
+                                   supported_langs=supported_langs,
+                                   error=None)
+
         text = request.form['textarea']
-        language_code = request.form.get('language')
-        voice_id = request.form.get('voice')
-        print(f'Language: {language_code}, Voice: {voice_id}')
-        # Call the convert function passing the form data
+        orig_lang = request.form.get("orig_lang")
+        prev_langs = list(set([orig_lang, ] + present_translations(text)))
+        new_lang = request.form.get("added_lang")
+        if request.form.get('add_lang'):
+            if (new_lang in prev_langs) or (new_lang == orig_lang):
+                return render_template('index.html', text=text,
+                                       present_langs=prev_langs,
+                                       orig_lang=orig_lang,
+                                       supported_langs=supported_langs,
+                                       voices=voices,
+                                       error=f'Language {new_lang} already present or is the original language')
+            text = add_translation(text, new_lang, orig_lang)
+            present_langs = list(set([orig_lang, ] + present_translations(text)))
+            return render_template('index.html', text=text,
+                                   present_langs=present_langs,
+                                   orig_lang=orig_lang,
+                                   voices=voices,
+                                   supported_langs=supported_langs,
+                                   error=None)
+
+        translations = split_translations(text, orig_lang, present_translations(text))
+
+        converter = Mp3SrtSynth(access_key_id=os.environ.get('polly_key_id'),
+                                secret_access_key=os.environ.get('polly_secret_key'),
+                                region=os.environ.get('polly_region'),
+                                engine=os.environ.get('polly_engine'),
+                                )
+
+        temp_mp3_paths = {}
+        temp_srt_paths = {}
+        zipped_mp3_file_names = {}
+        zipped_srt_file_names = {}
+
+        present_langs = list(set([orig_lang, ] + present_translations(text)))
+        for lang in present_langs:
+            converter.add_lang(voice_id=request.form.get(f"voice_{lang}"), short_lang_code=lang)
+            temp_mp3_paths[lang] = os.path.join(folder, f'{uid}_{lang}.mp3')
+            temp_srt_paths[lang] = os.path.join(folder, f'{uid}_{lang}.srt')
+            zipped_mp3_file_names[lang] = f'{lang}.mp3'
+            zipped_srt_file_names[lang] = f'{lang}.srt'
+
         try:
-            error_log = converter(args, text, output_folder=folder, mp3_file=f'{uid}.mp3', srt_file=f'{uid}.srt',
-                                  voice_id=voice_id, language_code=language_code)
-        except Exception:
-            import traceback
-            return render_template('error.html', error=traceback.format_exc(), lines=[])
+            converter.synthesize_all_langs(translations, temp_mp3_paths, temp_srt_paths)
+        except Exception as e:
+            return render_template('index.html', text=text,
+                                   present_langs=present_langs,
+                                   orig_lang=orig_lang,
+                                   voices=voices,
+                                   supported_langs=supported_langs,
+                                   error=f'Error: {e}')
 
-        if error_log:
-            return render_template('error.html', lines=error_log, error=None)
+        temp_files = list(temp_mp3_paths.values()) + list(temp_srt_paths.values())
+        zipped_files = list(zipped_mp3_file_names.values()) + list(zipped_srt_file_names.values())
 
-        create_zip_file(temp_zip, [temp_mp3, temp_srt], ['res.mp3', 'res.srt'])
+        create_zip_file(temp_zip, temp_files, zipped_files)
 
         # Return the file for download
         formatted_datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-        threading.Thread(target=remove_files_after_completion, args=([temp_mp3, temp_srt, temp_zip],)).start()
+        threading.Thread(target=remove_files_after_completion, args=(temp_files + [temp_zip],)).start()
 
         return send_file(temp_zip, as_attachment=True, download_name=f'mp3_srt_{formatted_datetime}.zip')
 
-    return render_template('index.html')
+    return render_template('index.html', text=None, present_langs=["EN"], orig_lang="EN", voices=voices,
+                           supported_langs=supported_langs, error=None)
+
+
+@app.route('/change_orig_lang', methods=['GET', 'POST'])
+def change_orig_lang():
+    voices = Mp3SrtSynth.voices
+    supported_langs = Mp3SrtSynth.lang_code_to_name
+    selected_lang = request.form.get('selectedValue')
+    return jsonify({"content": render_template('index.html', text="",
+                                               present_langs=[selected_lang, ],
+                                               orig_lang=selected_lang,
+                                               voices=voices,
+                                               supported_langs=supported_langs, error=None)})
 
 
 if __name__ == '__main__':

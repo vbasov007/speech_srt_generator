@@ -2,7 +2,7 @@ import json
 
 import boto3
 
-from utils import speech_marks_to_srt, text_to_ssml, remove_all_tags
+from utils.misc_utils import speech_marks_to_srt, text_to_ssml
 
 
 class AwsSpeechSynthesizer:
@@ -62,3 +62,12 @@ class AwsSpeechSynthesizer:
             if sm['type'] == 'ssml' and sm['value'] == 'end':
                 return int(sm['time'])
         return None
+
+    def start_sentence_timings(self, ssml):
+        speech_marks = self.synth_speech_marks(ssml)
+        res = []
+        for sm in speech_marks:
+            if sm['type'] == 'sentence':
+                res.append(int(sm['time']))
+
+        return res

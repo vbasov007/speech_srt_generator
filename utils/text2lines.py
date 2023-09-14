@@ -9,8 +9,11 @@ class ScriptLine:
     duration: int = 0
     adjustment: int = 0
 
+    def __str__(self):
+        return f'{self.type}: {self.value} ({self.duration}ms, {self.adjustment}ms)'
 
-def text2lines(text, sentence_prefix=None, break_prefix="#"):
+
+def text2lines(text, sentence_prefix=None, break_prefix="#") -> List[ScriptLine]:
     res = []
     lines = text.split('\n')
     for line in lines:
@@ -39,8 +42,10 @@ def lines2ssml(lines: List[ScriptLine]) -> str:
             res += f'<break time="{line.duration}ms"/>\n'
             continue
 
-        res += f'<s>{line.value}</s>\n'
+        # res += f'<s>{line.value}</s>\n'
         if line.adjustment > 0:
-            res += f'<break time="{line.adjustment}ms"/>\n'
+            res += f'<s>{line.value}<break time="{line.adjustment}ms"/></s>\n'
+        else:
+            res += f'<s>{line.value}</s>\n'
 
     return f'<speak>{res}</speak>'

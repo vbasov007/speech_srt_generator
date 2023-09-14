@@ -2,161 +2,109 @@
 <html>
 <head>
     <title>Text to mp3+srt</title>
-    <script>
-        function handleLanguageChange(languageList, voiceList) {
-            // Get the selected language value
-            var selectedLanguage = document.getElementById("language").value;
-
-            // Get the voice selection dropdown
-            var voiceDropdown = document.getElementById("voice");
-
-            // Remove any existing options
-            voiceDropdown.innerHTML = "";
-
-            // Add appropriate voice options based on selected language
-            var voices = voiceList[selectedLanguage];
-            voices.forEach(function(voice) {
-                var option = new Option(voice.name, voice.value);
-                voiceDropdown.add(option);
-            });
+    <style>
+        .error {
+            color: red;
         }
-    </script>
+    </style>
 </head>
 <body>
-    <div>
-        <h1>Text Script to Voice MP3 and Synchronized Subtitles Conversion.</h1>
-    </div>
-    <iframe width="1000" height="562" src="https://www.youtube.com/embed/s6sUGQrDMoc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-    <div>
-        <br><br>
-        <h2>Instructions:</h2>
-    - Create a plain text containing the script you want to convert.<br>
-    - Each line in the text file represents a subtitle caption, which will appear on the screen as one caption.<br>
-    - Ensure that each subtitle caption fits within a reasonable length to fit on the screen.<br>
-    - You can add additional pauses between sentences: add a line starting with "#" followed by the duration in milliseconds.<br>
-            For example, "#2000" represents a 2000ms or 2s pause.<br>
-    - We recommend adding pauses between sentences where the scenario assumes change of screen or action which has duration.<br>
-    - The pauses can be easily cut out from the final video.<br><br>
-    - Type or copy and paste the script into the text area below.<br>
-    - Select the language and voice you want to use.<br>
-    - Click on "Generate and Download File" button.<br>
-    - The generated files in zip-archived form will be downloaded to your computer.<br><br>
-                <h2>Example:</h2>
 <div>
-<pre>
-<code>
-One
-Two
-Three
-#2000
-Hello!.
-This is a tutorial on how to use the text to speech converter.
-#2000
-Create a plain text containing the script you want to convert.
-Each line in the text file represents a subtitle caption, which will appear on the screen as one caption.
-Ensure that each subtitle caption fits within a reasonable length to fit on the screen.
-#2000
-Type or copy and paste the script into the text area below.
-#1000
-Select the language and voice you want to use.
-#1000
-Click on "Generate and Download File" button.
-#2000
-The generated files in zip-archived form will be downloaded to your computer.
-#5000
-</code>
-</pre>
+    <h1>Text Script to Voice MP3 and Synchronized Subtitles Conversion.</h1>
 </div>
+<a href="/help"><h2>Help</h2></a>
+<br><br>
 
-    </div>
-                <h2>You can use SSML tags:</h2>
-<div>
-<pre>
-<code>
-I can speak French.
-&ltlang xml:lang="fr-FR"&gtJe ne parle pas français.&lt/lang&gt
+<form action="/" method="post">
+    <input name="orig_lang" value="{{ orig_lang }}" hidden>
+    <input type="submit" name="reset" value="Clear the form and start over" style="background-color: red; color: white;">
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+    <h2>Step 1:</h2>
+    <h3>Select original language:</h3>
+<!--    <select name="language" id="language" onchange="handleLanguageChange(languageList, voiceList)">-->
+    <select name="select_orig_lang" id="orig_lang">
+<!--    <select name="orig_lang" id="orig_lang" disabled>-->
+        {% for lang_code, name in supported_langs.items() %}
+            <option value="{{lang_code}}" {% if lang_code == orig_lang %}selected{% endif %}>{{name}}</option>
+        {% endfor %}
+    </select>
 
-You say, &ltphoneme alphabet="ipa" ph="pɪˈkɑːn"&gtpecan&lt/phoneme&gt.
-I say, &ltphoneme alphabet="ipa" ph="ˈpi.kæn"&gtpecan&lt/phoneme&gt.
+    <br><br>
 
-2 devided by 9 is pronounced &ltsay-as interpret-as="fraction"&gt2/9&lt/say-as&gt.
-See full list of pronounce modes at AWS polly help.
+    <h2>Step 2:</h2>
+    <h3>Enter text script here:</h3>
+    <textarea name="textarea" id="textarea" rows="25" cols="150" spellcheck="false">{% if text %}{{text}}{% endif %}</textarea>
+    <br><br>
+    <h2>Step 3:</h2>
+    <h3>Add translation to other languages:</h3>
+    <select name="added_lang" id="added_lang">
+        {% for lang_code, name in supported_langs.items() %}
+            <option value="{{lang_code}}" {% if lang_code in present_langs %}hidden{% endif %}>{{name}}</option>
+        {% endfor %}
+    </select>
+    <input type="submit" value="Add Language" name="add_lang" onclick="showElement('wait_translation');">
+    <div id="wait_translation" hidden>Translating... Please wait...</div>
+    <br><br>
+    <h2>Step 4:</h2>
+    <h3>Choose voice for each language:</h3>
+    <table>
+        {% for lang in present_langs %}
+            <tr>
+                <td>
+                    {{ lang }}:
+                </td>
+                <td>
+                    <select name="voice_{{lang}}" id="voice_{{lang}}">
+                        {% for voice in voices[lang] %}
+                                <option value="{{voice}}">{{voice}}</option>
+                        {% endfor %}
+                    </select>
+                 </td>
+            </tr>
+        {% endfor %}
 
-&ltsay-as interpret-as="characters"&gtICP&lt/say-as&gt
-is the abbreviation for Infineon Cloud Platform.
-</code>
-</pre>
-</div>
+    </table>
+    <h2>Step 5:</h2>
+    <h3>Click and wait. Zip file download will start shortly.</h3>
+    <div>Please be patient, as the preparation process may take some time. The download will start automatically once the files are ready.</div>
+    <br>
+    <input type="submit" value="Generate and Download File">
+</form>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var selectElement = document.getElementById('orig_lang');
 
-    </div>
+        selectElement.addEventListener('change', function() {
+            var selectedValue = selectElement.value;
 
-    <form action="/" method="post">
+            // Create an AJAX request
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/change_orig_lang', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 
-        <label for="language">Original Language:</label>
-        <select name="language" id="language" onchange="handleLanguageChange(languageList, voiceList)">
-            <!-- Language options will be added dynamically based on the provided languageList parameter -->
-        </select>
+            // Send the selected value
+            xhr.send('selectedValue=' + encodeURIComponent(selectedValue));
 
-        <br><br>
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == XMLHttpRequest.DONE && xhr.status == 200) {
+                    // Parse the JSON response
+                    var response = JSON.parse(xhr.responseText);
 
-        <label for="voice">Select Voice:</label>
-        <select name="voice" id="voice">
-            <!-- Voice options will be added dynamically based on the selected language -->
-        </select>
-
-        <br><br>
-
-        <input type="submit" value="Add Translation", id="translate-btn" disabled>
-        <br><br>
-        <h2>Enter text script here:</h2>
-        <textarea name="textarea" id="textarea" rows="50" cols="100"></textarea>
-        <br><br>
-
-
-        <input type="submit" value="Generate and Download File">
-    </form>
-
-    <script>
-        var languageList = [
-            { value: "en-US", name: "English (US)" },
-            { value: "de-DE", name: "German" },
-            { value: "cmn-CN", name: "Chinese (Mandarin/China)"},
-            // Add more language options as needed
-        ];
-
-        var voiceList = {
-            "en-US": [
-                { value: "Matthew", name: "Matthew" },
-                { value: "Joey", name: "Joey"},
-                { value: "Joanna", name: "Joanna" },
-                { value: "Kendra", name: "Kendra" },
-
-            ],
-            "de-DE": [
-                { value: "Daniel", name: "Daniel" },
-                { value: "Vicki", name: "Vicki" },
-            ],
-            "cmn-CN": [
-                { value: "Zhiyu", name: "Zhiyu" },
-            ],
-            // Add more voice options for each language as needed
-        };
-
-        // Set default language and corresponding voices
-        var defaultLanguage = languageList[0].value;
-        var defaultVoices = voiceList[defaultLanguage];
-
-        // Populate language options
-        var languageDropdown = document.getElementById("language");
-        languageList.forEach(function(language) {
-            var option = new Option(language.name, language.value);
-            languageDropdown.add(option);
+                    // Replace the current document with the updated content
+                    document.open();
+                    document.write(response.content);
+                    document.close();
+                }
+            };
         });
-
-        // Set default language and voices in dropdowns
-        languageDropdown.value = defaultLanguage;
-        handleLanguageChange(languageList, voiceList);
-        document.getElementById("voice").value = defaultVoices[0].value;
-    </script>
+    });
+</script>
+<script>
+    function showElement(id) {
+        document.getElementById(id).style.display = 'block';
+    }
+</script>
 </body>
 </html>

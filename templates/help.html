@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Help</title>
+</head>
+<body>
+<h1>Instruction</h1>
+<br><br>
+    <iframe width="1000" height="562" src="https://www.youtube.com/embed/s6sUGQrDMoc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    <div>
+        <br><br>
+        <h2>Instructions:</h2>
+    - Create a plain text containing the script you want to convert.<br>
+    - Each line in the text file represents a subtitle caption, which will appear on the screen as one caption.<br>
+    - Ensure that each subtitle caption fits within a reasonable length to fit on the screen.<br>
+    - You can add additional pauses between sentences: add a line starting with "#" followed by the duration in milliseconds.<br>
+            For example, "#2000" represents a 2000ms or 2s pause.<br>
+    - We recommend adding pauses between sentences where the scenario assumes change of screen or action which has duration.<br>
+    - The pauses can be easily cut out from the final video.<br><br>
+    - Type or copy and paste the script into the text area below.<br>
+    - Select the language and voice you want to use.<br>
+    - Click on "Generate and Download File" button.<br>
+    - The generated files in zip-archived form will be downloaded to your computer.<br><br>
+                <h2>Example:</h2>
+<div>
+<pre>
+<code>
+One
+Two
+Three
+#2000
+Hello!.
+This is a tutorial on how to use the text to speech converter.
+#2000
+Create a plain text containing the script you want to convert.
+Each line in the text file represents a subtitle caption, which will appear on the screen as one caption.
+Ensure that each subtitle caption fits within a reasonable length to fit on the screen.
+#2000
+Type or copy and paste the script into the text area below.
+#1000
+Select the language and voice you want to use.
+#1000
+Click on "Generate and Download File" button.
+#2000
+The generated files in zip-archived form will be downloaded to your computer.
+#5000
+</code>
+</pre>
+</div>
+
+    </div>
+                <h2>You can use SSML tags:</h2>
+<div>
+<pre>
+<code>
+I can speak French.
+&ltlang xml:lang="fr-FR"&gtJe ne parle pas français.&lt/lang&gt
+
+You say, &ltphoneme alphabet="ipa" ph="pɪˈkɑːn"&gtpecan&lt/phoneme&gt.
+I say, &ltphoneme alphabet="ipa" ph="ˈpi.kæn"&gtpecan&lt/phoneme&gt.
+
+2 devided by 9 is pronounced &ltsay-as interpret-as="fraction"&gt2/9&lt/say-as&gt.
+See full list of pronounce modes at AWS polly help.
+
+&ltsay-as interpret-as="characters"&gtICP&lt/say-as&gt
+is the abbreviation for Infineon Cloud Platform.
+</code>
+</pre>
+</div>
+
+    </div>
+</body>
+</html>

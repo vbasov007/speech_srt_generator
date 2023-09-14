@@ -10,17 +10,15 @@ Options:
   -f --out_folder=DATA_FOLDER           [default: output]
 """
 
+import codecs
 import os
 from collections import namedtuple
 
 import docopt
 import yaml
 
-import codecs
-
 from aws_speech_synthesizer import AwsSpeechSynthesizer
-
-from text2lines import text2lines, lines2ssml
+from utils.text2lines import text2lines, lines2ssml
 
 ProviderConfig = namedtuple('ProviderConfig', ['access_key_id', 'secret_access_key', 'region'])
 EngineConfig = namedtuple('EngineConfig', ['engine', 'voice_id', 'speech_style', 'language_code'])
@@ -56,6 +54,10 @@ class ArgsParser:
                             voice_id=c.get('voice_id', 'Joanna'),
                             speech_style=c.get('speech_style', None),
                             language_code=c.get('language_code', 'en-US'))
+
+    @property
+    def translator_key(self):
+        return self._config().get('translator_key', os.environ.get('translator_key'))
 
     @property
     def output_folder(self):
@@ -98,7 +100,6 @@ def converter(args, text=None, output_folder=None, mp3_file=None, srt_file=None,
     output_folder = cfg.output_folder if output_folder is None else output_folder
     mp3_file_path = cfg.mp3_file_path if mp3_file is None else os.path.join(output_folder, mp3_file)
     srt_file_path = cfg.srt_file_path if srt_file is None else os.path.join(output_folder, srt_file)
-
 
     if text is not None:
         input_text = text
