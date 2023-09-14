@@ -23,4 +23,5 @@ requests==2.31.0
 s3transfer==0.6.1
 six==1.16.0
 urllib3==1.26.16
+waitress==2.1.2
 Werkzeug==2.3.6

@@ -6,6 +6,7 @@ import uuid
 import zipfile
 
 from flask import Flask, render_template, request, send_file, jsonify
+from waitress import serve
 
 from mp3_srt_synth import Mp3SrtSynth
 from multilang import split_translations, add_translation, present_translations
@@ -154,4 +155,5 @@ def change_orig_lang():
 
 
 if __name__ == '__main__':
-    app.run(debug=False, host='0.0.0.0', port=8080)
+    # app.run(debug=False, host='0.0.0.0', port=8080)
+    serve(app, host='0.0.0.0', port=8080)
