@@ -57,6 +57,9 @@ def show_help():
 @app.route('/', methods=['GET', 'POST'])
 def home():
     folder = 'output'
+    # if folder does not exist, create it
+    if not os.path.exists(folder):
+        os.makedirs(folder)
     uid = uuid.uuid4()
     temp_zip = os.path.join(folder, f'{uid}.zip')
     voices = Mp3SrtSynth.voices
