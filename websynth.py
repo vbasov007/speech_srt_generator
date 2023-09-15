@@ -100,7 +100,6 @@ def home():
         converter = Mp3SrtSynth(access_key_id=os.environ.get('polly_key_id'),
                                 secret_access_key=os.environ.get('polly_secret_key'),
                                 region=os.environ.get('polly_region'),
-                                engine=os.environ.get('polly_engine'),
                                 )
 
         temp_mp3_paths = {}
@@ -110,7 +109,11 @@ def home():
 
         present_langs = list(set([orig_lang, ] + present_translations(text)))
         for lang in present_langs:
-            converter.add_lang(voice_id=request.form.get(f"voice_{lang}"), short_lang_code=lang)
+            voice = request.form.get(f"voice_{lang}")
+            engine = 'standard'
+            if voice in Mp3SrtSynth.neural_voices:
+                engine = 'neural'
+            converter.add_lang(voice_id=request.form.get(f"voice_{lang}"), short_lang_code=lang, engine=engine)
             temp_mp3_paths[lang] = os.path.join(folder, f'{uid}_{lang}.mp3')
             temp_srt_paths[lang] = os.path.join(folder, f'{uid}_{lang}.srt')
             zipped_mp3_file_names[lang] = f'{lang}.mp3'

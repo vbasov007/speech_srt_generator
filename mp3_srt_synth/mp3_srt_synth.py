@@ -16,7 +16,7 @@ class Mp3SrtSynth:
         'IT': 'it-IT',
         # 'PL': 'pl-PL',
         # 'PT': 'pt-PT',
-        # 'RU': 'ru-RU',
+        'RU': 'ru-RU',
         'JA': 'ja-JP',
         'ZH': 'cmn-CN',
     }
@@ -29,7 +29,7 @@ class Mp3SrtSynth:
         'IT': 'Italiano',
         # 'PL': 'Polski',
         # 'PT': 'Português'
-        # 'RU': 'Русский',
+        'RU': 'Русский',
         'JA': 'Japanese',
         'ZH': 'Chinese',
     }
@@ -41,20 +41,27 @@ class Mp3SrtSynth:
         "IT": ["Bianca", "Adriano"],
         "ZH": ["Zhiyu",],
         "JA": ["Kazuha", "Takumi", "Tomoko"],
+        "RU": ["Maxim", "Tatyana"],
     }
 
-    def __init__(self, access_key_id, secret_access_key, region, engine):
+    neural_voices = ["Matthew", "Joey", "Joanna", "Kendra",
+                     "Daniel", "Vicki",
+                     "Lea", "Remi",
+                     "Bianca", "Adriano",
+                     "Zhiyu",
+                     "Kazuha", "Takumi", "Tomoko"]
+
+    def __init__(self, access_key_id, secret_access_key, region):
         self._access_key_id = access_key_id
         self._secret_access_key = secret_access_key
         self._region = region
-        self._engine = engine
         self._synthesizers: Dict[str, AwsSpeechSynthesizer] = {}
 
-    def add_lang(self, voice_id, short_lang_code, speech_style="conversational"):
+    def add_lang(self, voice_id, short_lang_code, speech_style="conversational", engine="neural"):
         self._synthesizers[short_lang_code] = AwsSpeechSynthesizer(access_key_id=self._access_key_id,
                                                                    secret_access_key=self._secret_access_key,
                                                                    region_name=self._region,
-                                                                   engine=self._engine,
+                                                                   engine=engine,
                                                                    voice_id=voice_id,
                                                                    speech_style=speech_style,
                                                                    language_code=self.long_lang_code[short_lang_code],
