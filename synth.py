@@ -115,8 +115,8 @@ def converter(args, text=None, output_folder=None, mp3_file=None, srt_file=None,
         for line in lines:
             if line.type == 'sentence':
                 try:
-                    line.duration = synth.duration(line.value)
-                    print(f'{line.value} - {line.duration}')
+                    line.time_to_next = synth.duration(line.value)
+                    print(f'{line.value} - {line.time_to_next}')
                 except Exception:
                     error_log.append(f'{line.value}')
 

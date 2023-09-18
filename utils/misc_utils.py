@@ -1,5 +1,6 @@
 import datetime as dt
 import re
+from typing import Optional
 
 
 def split(delimiters, string, maxsplit=0):
@@ -48,6 +49,30 @@ def tf(delta_ms: int) -> str:
     tz = dt.datetime.strptime("0", '%S')
     delta = dt.timedelta(milliseconds=delta_ms)
     return (tz + delta).strftime("%H:%M:%S,%f")[:-3]
+
+
+def string_to_ms(time_str: str) -> Optional[int]:
+    time_str = time_str.strip()
+    sep = ":"
+    p = time_str.split(sep)
+    if len(p) == 3:
+        h, m, s = p
+    elif len(p) == 2:
+        m, s = p
+        h = "0"
+    else:
+        return None
+
+    s = s.replace(',', '.')
+    try:
+        sf = float(s)
+    except ValueError:
+        return None
+
+    if h.isnumeric() and m.isnumeric():
+        return int(int(h) * 3600000 + int(m) * 60000 + sf * 1000)
+
+    return None
 
 
 def speech_marks_to_srt(speech_marks: list, remove_tags=True) -> str:

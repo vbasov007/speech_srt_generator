@@ -2,6 +2,7 @@ from typing import List
 
 from multilang import Translation
 from .translator_url_key import translator_url_key
+from utils import string_to_ms
 
 
 def add_translation(text, target_lang, source_lang, startswith_symb="#", block_visual_splitter="---") -> str:
@@ -24,7 +25,8 @@ def add_translation(text, target_lang, source_lang, startswith_symb="#", block_v
 
         # leave pause markers untouched (e.g. #1000) and add visual splitter before them for better readability
         if line.startswith(startswith_symb):
-            if line[len(startswith_symb):].strip().isnumeric():
+            val = line[len(startswith_symb):]
+            if val.strip().isnumeric() or (string_to_ms(val) is not None):
                 res.append(block_visual_splitter)
                 res.append(line)
                 continue
@@ -81,9 +83,10 @@ def split_translations(text, orig_lang, langs: list, startswith_symb="#", block_
                 lang_lines[key].append("")
             continue
 
-        # add pause markers to all languages
+        # add pause markers end time markers to all languages
         if line.startswith(startswith_symb):
-            if line[len(startswith_symb):].strip().isnumeric():
+            val = line[len(startswith_symb):]
+            if val.strip().isnumeric() or (string_to_ms(val) is not None):
                 for key in lang_lines.keys():
                     lang_lines[key].append(line)
                 continue

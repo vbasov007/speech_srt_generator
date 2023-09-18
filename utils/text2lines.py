@@ -1,16 +1,18 @@
 from dataclasses import dataclass
 from typing import List
+from utils import string_to_ms
 
 
 @dataclass
 class ScriptLine:
     type: str
     value: str = ''
-    duration: int = 0
+    time_to_next: int = 0
     adjustment: int = 0
+    absolute_start_time: int = 0
 
     def __str__(self):
-        return f'{self.type}: {self.value} ({self.duration}ms, {self.adjustment}ms)'
+        return f'{self.type}: {self.value} ({self.time_to_next}ms, {self.adjustment}ms)'
 
 
 def text2lines(text, sentence_prefix=None, break_prefix="#") -> List[ScriptLine]:
@@ -20,10 +22,13 @@ def text2lines(text, sentence_prefix=None, break_prefix="#") -> List[ScriptLine]
         if len(line.strip()) == 0:
             continue
         if line.startswith(break_prefix):
-            break_time = line[1:].strip()
-            if break_time.isnumeric():
-                res.append(ScriptLine('break', duration=break_time))
-                continue
+            value = line[1:].strip()
+            if value.isnumeric():
+                res.append(ScriptLine('break', time_to_next=int(value)))
+            elif string_to_ms(value) is not None:
+                res.append(ScriptLine('time_mark', absolute_start_time=string_to_ms(value)))
+            continue
+
         if sentence_prefix is None:
             line = line.strip()
         elif line.startswith(sentence_prefix):
@@ -39,7 +44,18 @@ def lines2ssml(lines: List[ScriptLine]) -> str:
     res = ''
     for line in lines:
         if line.type == 'break':
-            res += f'<break time="{line.duration}ms"/>\n'
+            res += f'<break time="{line.time_to_next}ms"/>\n'
+            continue
+
+        if line.type == 'time_mark':
+            if line.adjustment > 0:
+                adj = line.adjustment - 380
+                if adj < 0:
+                    adj = 0
+                while adj > 10000:
+                    res += f'<break time="10000ms"/>\n'
+                    adj -= 10000
+                res += f'<break time="{adj}ms"/>\n'
             continue
 
         # res += f'<s>{line.value}</s>\n'
@@ -49,3 +65,5 @@ def lines2ssml(lines: List[ScriptLine]) -> str:
             res += f'<s>{line.value}</s>\n'
 
     return f'<speak>{res}</speak>'
+
+

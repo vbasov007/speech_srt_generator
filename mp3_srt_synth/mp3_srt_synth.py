@@ -73,14 +73,14 @@ class Mp3SrtSynth:
             lines[short_lang_code] = text2lines(text)
             for line in lines[short_lang_code]:
                 if line.type == 'sentence':
-                    line.duration = self._synthesizers[short_lang_code].duration(line.value)
+                    line.time_to_next = self._synthesizers[short_lang_code].duration(line.value)
 
         keys = list(lines.keys())
         for i, v in enumerate(zip(*lines.values())):
             if v[0].type != 'sentence':
                 continue
-            max_duration = max(x.duration for x in v)
-            rs = [max_duration - x.duration for x in v]
+            max_duration = max(x.time_to_next for x in v)
+            rs = [max_duration - x.time_to_next for x in v]
             for l, r in zip(keys, rs):
                 lines[l][i].adjustment = r
 
@@ -95,12 +95,12 @@ class Mp3SrtSynth:
             timings = self._synthesizers[short_lang_code].start_sentence_timings(ssml)
             sentences[short_lang_code] = [x for x in lines[short_lang_code] if x.type == 'sentence']
             for i in range(len(sentences[short_lang_code]) - 1):
-                sentences[short_lang_code][i].duration = timings[i+1] - timings[i]
+                sentences[short_lang_code][i].time_to_next = timings[i + 1] - timings[i]
 
         keys = list(sentences.keys())
         for i, v in enumerate(zip(*sentences.values())):
-            max_duration = max(x.duration for x in v)
-            rs = [max_duration - x.duration for x in v]
+            max_duration = max(x.time_to_next for x in v)
+            rs = [max_duration - x.time_to_next for x in v]
             for l, r in zip(keys, rs):
                 sentences[l][i].adjustment = r
 
@@ -110,6 +110,18 @@ class Mp3SrtSynth:
                 if line.type == 'sentence':
                     line.adjustment = sentences[k][i].adjustment
                     i+=1
+
+        # apply absolute timings
+        for k in keys:
+            absolut_time = 0
+            for line in lines[k]:
+                if line.type == 'break':
+                    continue
+                absolut_time += line.time_to_next + line.adjustment
+                if line.type == "time_mark":
+                    if line.absolute_start_time > absolut_time:
+                        line.adjustment = line.absolute_start_time - absolut_time
+                        absolut_time = line.absolute_start_time
 
         return lines
 
