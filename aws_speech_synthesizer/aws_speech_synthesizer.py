@@ -4,6 +4,8 @@ import boto3
 
 from utils.misc_utils import speech_marks_to_srt, text_to_ssml
 
+from mylogger import mylog
+
 
 class AwsSpeechSynthesizer:
     def __init__(self, **kwargs):
@@ -21,6 +23,7 @@ class AwsSpeechSynthesizer:
         self.client = session.client('polly')
 
     def synth_mp3(self, ssml):
+        mylog.info(f'Sending request to aws polly for synthesizing mp3: {len(ssml)} symbols')
         response = self.client.synthesize_speech(Engine=self.engine,
                                                  VoiceId=self.voice_id,
                                                  OutputFormat='mp3',
@@ -29,9 +32,11 @@ class AwsSpeechSynthesizer:
                                                  LanguageCode=self.language_code,
                                                  Text=ssml
                                                  )
+        mylog.info('Received response for synthesizing mp3')
         return response['AudioStream'].read()
 
     def synth_speech_marks(self, ssml):
+        mylog.info(f'Sending request to aws polly for synthesizing json: {len(ssml)} symbols')
         response = self.client.synthesize_speech(Engine=self.engine,
                                                  VoiceId=self.voice_id,
                                                  OutputFormat='json',
@@ -40,6 +45,7 @@ class AwsSpeechSynthesizer:
                                                  LanguageCode=self.language_code,
                                                  Text=ssml
                                                  )
+        mylog.info('Received response for synthesizing json')
         sm_json = response['AudioStream'].read().decode('utf-8').split('\n')
         speech_marks_list = [json.loads(r) for r in sm_json if r != '']
         return speech_marks_list

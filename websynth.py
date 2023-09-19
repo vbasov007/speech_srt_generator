@@ -11,6 +11,8 @@ from waitress import serve
 from mp3_srt_synth import Mp3SrtSynth
 from multilang import split_translations, add_translation, present_translations
 
+from mylogger import mylog
+
 app = Flask(__name__)
 
 args = {'--config': 'config.yaml',
@@ -41,9 +43,9 @@ def remove_files_after_completion(file_paths: list, delay: int = 5, repeat: int 
             try:
                 os.remove(f)
             except:
-                pass
+                mylog.error(f'Failed to remove {f}')
             else:
-                print(f'Removed {f}')
+                mylog.info(f'Removed {f}')
                 not_deleted.remove(f)
 
 
@@ -61,6 +63,7 @@ def home():
     # if folder does not exist, create it
     if not os.path.exists(folder):
         os.makedirs(folder)
+
     uid = uuid.uuid4()
     temp_zip = os.path.join(folder, f'{uid}.zip')
     voices = Mp3SrtSynth.voices
