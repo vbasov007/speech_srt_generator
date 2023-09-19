@@ -3,9 +3,10 @@ import requests
 
 class Translation:
 
-    def __init__(self, url, api_key):
+    def __init__(self, url, api_key, verify=False):
         self.api_key = api_key
         self.base_url = url
+        self._verify = verify
 
     def translate_text(self, text, target_lang, source_lang=None):
         params = {
@@ -19,7 +20,8 @@ class Translation:
         #                          headers={'Content-Type': 'application/json',
         #                                   'Authorization': 'DeepL-Auth-Key ' + self.api_key})
 
-        response = requests.post(self.base_url, data=params)
+        # headers = {'accept':'application/json','Content-Type': 'application/x-www-form-urlencoded'}
+        response = requests.post(self.base_url, data=params, verify=self._verify)
         if response.status_code == 200:
             translation = response.json()['translations'][0]['text']
             return translation
