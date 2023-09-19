@@ -60,6 +60,10 @@ class ArgsParser:
         return self._config().get('translator_key', os.environ.get('translator_key'))
 
     @property
+    def ignore_translator_ssl_cert(self):
+        return os.environ.get('ignore_translator_ssl_cert', False)
+
+    @property
     def output_folder(self):
         return self.args.get('--out_folder', '')
 

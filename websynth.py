@@ -89,7 +89,8 @@ def home():
                                        supported_langs=supported_langs,
                                        voices=voices,
                                        error=f'Language {new_lang} already present or is the original language')
-            text = add_translation(text, new_lang, orig_lang)
+            text = add_translation(text, new_lang, orig_lang,
+                                   verify_cert=not bool(os.environ.get('ignore_translator_ssl_cert', False)))
             present_langs = list(set([orig_lang, ] + present_translations(text)))
             return render_template('index.html', text=text,
                                    present_langs=present_langs,

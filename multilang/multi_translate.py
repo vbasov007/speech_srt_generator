@@ -5,10 +5,10 @@ from .translator_url_key import translator_url_key
 from utils import string_to_ms
 
 
-def add_translation(text, target_lang, source_lang, startswith_symb="#", block_visual_splitter="---") -> str:
+def add_translation(text, target_lang, source_lang, startswith_symb="#", block_visual_splitter="---", verify_cert=True) -> str:
     lines = text.split('\n')
     url, key = translator_url_key()
-    tr = Translation(url, key)
+    tr = Translation(url, key, verify=verify_cert)
     res = []
     for line in lines:
         # leave visual splitter between blocks

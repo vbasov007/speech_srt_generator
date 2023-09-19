@@ -3,7 +3,7 @@ import requests
 
 class Translation:
 
-    def __init__(self, url, api_key, verify=False):
+    def __init__(self, url, api_key, verify=True):
         self.api_key = api_key
         self.base_url = url
         self._verify = verify
