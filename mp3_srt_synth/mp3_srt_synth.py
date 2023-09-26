@@ -1,5 +1,5 @@
 import codecs
-from typing import List, Dict
+from typing import List, Dict, Callable, Optional
 
 from aws_speech_synthesizer import AwsSpeechSynthesizer
 from utils.text2lines import text2lines, lines2ssml, ScriptLine
@@ -51,11 +51,18 @@ class Mp3SrtSynth:
                      "Zhiyu",
                      "Kazuha", "Takumi", "Tomoko"]
 
-    def __init__(self, access_key_id, secret_access_key, region):
+    def __init__(self, access_key_id, secret_access_key, region, progress: Optional[Callable] = None):
         self._access_key_id = access_key_id
         self._secret_access_key = secret_access_key
         self._region = region
         self._synthesizers: Dict[str, AwsSpeechSynthesizer] = {}
+        self._progress = progress
+
+    def _progress_message(self, text, ratio):
+        if self._progress:
+            self._progress({'message':text, 'ratio': ratio})
+            return
+        return
 
     def add_lang(self, voice_id, short_lang_code, speech_style="conversational", engine="neural"):
         self._synthesizers[short_lang_code] = AwsSpeechSynthesizer(access_key_id=self._access_key_id,
@@ -90,6 +97,11 @@ class Mp3SrtSynth:
         lines: Dict[str, List[ScriptLine]] = {}
         sentences: Dict[str, List[ScriptLine]] = {}
         for short_lang_code, text in translations.items():
+
+            self._progress_message(f"Calculating timing adjustments for {short_lang_code}, "
+                                   f"#{list(translations.keys()).index(short_lang_code) + 1} "
+                                   f"out of {len(translations)}", 0)
+
             lines[short_lang_code] = text2lines(text)
             ssml = lines2ssml(lines[short_lang_code])
             timings = self._synthesizers[short_lang_code].start_sentence_timings(ssml)
@@ -123,6 +135,8 @@ class Mp3SrtSynth:
                         line.adjustment = line.absolute_start_time - absolut_time
                         absolut_time = line.absolute_start_time
 
+        self._progress_message("Timing adjustments: Done.", 0)
+
         return lines
 
     def synth_mp3_srt(self, lines: List[ScriptLine], mp3_file_path, srt_file_path, short_lang_code):
@@ -133,6 +147,13 @@ class Mp3SrtSynth:
 
     def synthesize_all_langs(self, translations: Dict[str, str],
                              mp3_file_paths: Dict[str, str], srt_file_paths: Dict[str, str]):
+
         adjusted = self._calc_adjustments(translations)
         for short_lang_code, lines in adjusted.items():
+
+            self._progress_message(f"Creating audio for: {short_lang_code}, "
+                                   f"#{list(adjusted.keys()).index(short_lang_code) + 1} out of {len(adjusted)}", 0)
+
             self.synth_mp3_srt(lines, mp3_file_paths[short_lang_code], srt_file_paths[short_lang_code], short_lang_code)
+
+        self._progress_message("Done!", 100)

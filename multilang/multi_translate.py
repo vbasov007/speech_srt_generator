@@ -1,11 +1,13 @@
-from typing import List
+from typing import List, Callable, Optional
 
 from multilang import Translation
 from .translator_url_key import translator_url_key
 from utils import string_to_ms
 
 
-def add_translation(text, target_lang, source_lang, startswith_symb="#", block_visual_splitter="---", verify_cert=True) -> str:
+def add_translation(text, target_lang, source_lang, startswith_symb="#", block_visual_splitter="---",
+                    verify_cert=True,
+                    progress_indicator: Optional[Callable] = None) -> str:
     lines = text.split('\n')
     url, key = translator_url_key()
     tr = Translation(url, key, verify=verify_cert)
@@ -50,7 +52,9 @@ def add_translation(text, target_lang, source_lang, startswith_symb="#", block_v
             if prev_line != block_visual_splitter:
                 res.append(block_visual_splitter)
             res.append(prefixed_line)
-            res.append(f"{startswith_symb}{target_lang}: " + tr.translate_text(line, target_lang, source_lang))
+            output_line = f"{startswith_symb}{target_lang}: " + tr.translate_text(line, target_lang, source_lang)
+            progress_indicator({"message": output_line})
+            res.append(output_line)
 
     return '\n'.join(res)
 

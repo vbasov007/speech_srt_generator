@@ -1,0 +1,10 @@
+{% for lang in present_langs %}
+    <div class="d-flex flex-row">
+    <label for="voice_{{lang}}">{{lang}}: </label>
+    <select class="p-2" name="voice_{{lang}}" id="voice_{{lang}}">
+        {% for voice in voices[lang] %}
+            <option value="{{voice}}">{{voice}}</option>
+        {% endfor %}
+    </select>
+    </div>
+{% endfor %}
