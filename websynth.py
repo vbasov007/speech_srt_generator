@@ -7,7 +7,6 @@ import zipfile
 
 from flask import Flask, render_template, request, send_file, jsonify, redirect, url_for
 from turbo_flask import Turbo
-from waitress import serve
 
 from mp3_srt_synth import Mp3SrtSynth
 from multilang import split_translations, add_translation, present_translations
