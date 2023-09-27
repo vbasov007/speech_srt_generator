@@ -14,11 +14,12 @@ import utils
 from mp3_srt_synth import Mp3SrtSynth
 from multilang import split_translations, add_translation, present_translations
 from mylogger import mylog
-from turbo_webpage_elements import *
+
 
 app = Flask(__name__)
 turbo = Turbo(app)
 
+from turbo_webpage_elements import *
 
 def create_zip_file(zip_file_path, file_paths: list, zipped_file_names: list = None):
     with zipfile.ZipFile(zip_file_path, 'w') as zip_file:
