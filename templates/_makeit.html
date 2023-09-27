@@ -3,8 +3,8 @@
     <div class="inlined-item">
         {% if making_error %}
             <span class="error">&nbsp;{{ making_error }}</span>
-        {% elif download_file_path %}
-            <a class="flash-link alert alert-success" href="/download/{{ download_file_path }}?name={{ download_name }}">&nbsp;Click here to Download - Hurry, Link Valid for 10 Minutes Only!</a>
+        {% elif download_file_name %}
+            <a class="flash-link alert alert-success" href="/download/{{ download_file_name }}?name={{ download_as_name }}">&nbsp;Click here to Download - Hurry, Link Valid for 10 Minutes Only!</a>
         {% endif %}
     </div>
 </div>

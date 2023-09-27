@@ -6,8 +6,7 @@ from utils import string_to_ms
 
 
 def add_translation(text, target_lang, source_lang, startswith_symb="#", block_visual_splitter="---",
-                    verify_cert=True,
-                    progress_indicator: Optional[Callable] = None) -> str:
+                    verify_cert=True) -> str:
     lines = text.split('\n')
     url, key = translator_url_key()
     tr = Translation(url, key, verify=verify_cert)
@@ -53,7 +52,6 @@ def add_translation(text, target_lang, source_lang, startswith_symb="#", block_v
                 res.append(block_visual_splitter)
             res.append(prefixed_line)
             output_line = f"{startswith_symb}{target_lang}: " + tr.translate_text(line, target_lang, source_lang)
-            progress_indicator({"message": output_line})
             res.append(output_line)
 
     return '\n'.join(res)
@@ -65,9 +63,6 @@ def present_translations(text, startswith_symb="#") -> List[str]:
     matches = re.findall(pattern, text, re.MULTILINE)
     return list(set(matches))
 
-
-# def multi_translate_as_list(text, target_langs: list, source_lang: str, startswith_symb="#",
-#                             block_visual_splitter="---") -> list:
 
 
 def split_translations(text, orig_lang, langs: list, startswith_symb="#", block_visual_splitter="---") -> dict:

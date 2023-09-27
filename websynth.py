@@ -5,24 +5,20 @@ import time
 import uuid
 import zipfile
 
-from flask import Flask, render_template, request, send_file, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify
+from flask import send_from_directory
 from turbo_flask import Turbo
 
 from mp3_srt_synth import Mp3SrtSynth
 from multilang import split_translations, add_translation, present_translations
-
-from progress_indicator import ProgressIndicator
-
 from mylogger import mylog
+
+from turbo_webpage_elements import *
+
+# from progress_indicator import ProgressIndicator
 
 app = Flask(__name__)
 turbo = Turbo(app)
-
-args = {'--config': 'config.yaml',
-        '--input': 'input.txt',
-        '--mp3': 'res.mp3',
-        '--out_folder': 'output',
-        '--srt': 'res.srt'}
 
 
 def create_zip_file(zip_file_path, file_paths: list, zipped_file_names: list = None):
@@ -45,14 +41,11 @@ def remove_files_after_completion(file_paths: list, delay: int = 600, repeat: in
         for f in remaining:
             try:
                 os.remove(f)
-            except:
-                mylog.error(f'Failed to remove {f}')
+            except Exception as e:
+                mylog.error(f'Failed to remove {f}: {e}')
             else:
                 mylog.info(f'Removed {f}')
                 not_deleted.remove(f)
-
-
-from flask import send_from_directory
 
 
 @app.route('/help')
@@ -72,150 +65,86 @@ def home():
     temp_zip = os.path.join(folder, f'{uid}.zip')
     voices = Mp3SrtSynth.voices
     supported_langs = Mp3SrtSynth.lang_code_to_name
+
     if request.method == 'POST':
-        orig_lang = request.form.get("orig_lang")
+
         if request.form.get('reset'):
-            orig_lang = "EN"
-            return turbo.stream([
-                turbo.update(render_template("_textarea.html", text=""), target="textarea_frame"),
-                turbo.update(render_template("_select_orig_lang.html",
-                                             supported_langs=supported_langs,
-                                             orig_lang=orig_lang,
-                                             disabled_orig_lang_change=False),
-                             target="select_orig_lang_frame"),
-                turbo.update(render_template("_set_orig_lang.html", orig_lang=orig_lang),
-                             target="set_orig_lang_frame"),
-                turbo.update(render_template("_makeit.html", making_error="", download_file_path=""),
-                             target="makeit_frame"),
-                turbo.update(render_template("_select_voices.html",
-                                             present_langs=['EN'],
-                                             voices=voices),
-                             target="select_voices")
-            ])
+            return page_update_on_reset(supported_langs=supported_langs, voices=voices)
+
+        orig_lang = request.form.get("orig_lang")
 
         if request.form.get('change_orig_lang'):
-        # if request.form.get("selected_orig_lang") != orig_lang:
             orig_lang = request.form.get("selected_orig_lang")
-            return turbo.stream([
-                turbo.update(render_template("_set_orig_lang.html", orig_lang=orig_lang),
-                             target="set_orig_lang_frame"),
-                turbo.update(render_template("_select_orig_lang.html",
-                                             supported_langs=supported_langs,
-                                             orig_lang=orig_lang,
-                                             disabled_orig_lang_change=False),
-                             target="select_orig_lang_frame"),
-                turbo.update(render_template("_makeit.html", making_error="", download_file_path=""),
-                             target="makeit_frame"),
-                turbo.update(render_template("_select_voices.html",
-                                             present_langs=[orig_lang],
-                                             voices=voices),
-                             target="select_voices"),
-                turbo.update(render_template("_add_translation.html",
-                                             supported_langs=supported_langs,
-                                             present_langs=[orig_lang],
-                                             ), target="add_translation_frame")
-
-            ])
-
+            return page_update_on_change_orig_lang(orig_lang=orig_lang, supported_langs=supported_langs, voices=voices)
 
         text = request.form['textarea']
-        prev_langs = list(set([orig_lang, ] + present_translations(text)))
-        new_lang = request.form.get("added_lang")
-        if request.form.get('add_lang'):
-            if (new_lang in prev_langs) or (new_lang == orig_lang):
-                return turbo.stream([
-                    turbo.update(render_template("_add_translation.html",
-                                                 supported_langs=supported_langs,
-                                                 present_langs=prev_langs,
-                                                 translation_message=f'Language {new_lang} already present or is the original language',
-                                                 ), target="add_translation_frame")
-                ])
 
-            translation_pi = ProgressIndicator("translation-progress-info", app, turbo, "_translation_progress_info.html")
+        if request.form.get('add_lang'):
+            prev_langs = list(set([orig_lang, ] + present_translations(text)))
+            new_lang = request.form.get("added_lang")
+            if (new_lang in prev_langs) or (new_lang == orig_lang):
+                return page_update_on_add_translation_reject(supported_langs=supported_langs,
+                                                             present_langs=prev_langs,
+                                                             message=f'Language {new_lang} already present'
+                                                                     f' or is the original language')
+
             text = add_translation(text, new_lang, orig_lang,
-                                   verify_cert=not bool(os.environ.get('ignore_translator_ssl_cert', False)),
-                                   progress_indicator=translation_pi.message)
-            translation_pi.clear()
+                                   verify_cert=not bool(os.environ.get('ignore_translator_ssl_cert', False)))
 
             present_langs = list(set([orig_lang, ] + present_translations(text)))
-            return turbo.stream([
-                turbo.update(render_template("_select_orig_lang.html",
-                                             disabled_orig_lang_change=True,
-                                             supported_langs=supported_langs,
-                                             orig_lang=orig_lang),
-                             target="select_orig_lang_frame"),
-                turbo.update(render_template("_add_translation.html",
-                                             supported_langs=supported_langs,
-                                             present_langs=prev_langs,
-                                             ), target="add_translation_frame"),
-                turbo.update(render_template("_textarea.html", text=text),
-                             target="textarea_frame"),
-                turbo.update(render_template("_select_voices.html",
-                                             present_langs=present_langs,
-                                             voices=voices),
-                             target="select_voices")
-            ])
 
-        translations = split_translations(text, orig_lang, present_translations(text))
+            return page_update_on_add_translation_success(text=text, supported_langs=supported_langs,
+                                                          orig_lang=orig_lang,present_langs=present_langs,
+                                                          voices=voices)
 
-        pi = ProgressIndicator("progress-info", app, turbo, "_synth_progress_info.html")
-        converter = Mp3SrtSynth(access_key_id=os.environ.get('polly_key_id'),
-                                secret_access_key=os.environ.get('polly_secret_key'),
-                                region=os.environ.get('polly_region'),
-                                progress=pi.message,
-                                )
+        if request.form.get("makeit"):
 
-        temp_mp3_paths = {}
-        temp_srt_paths = {}
-        zipped_mp3_file_names = {}
-        zipped_srt_file_names = {}
+            translations = split_translations(text, orig_lang, present_translations(text))
 
-        present_langs = list(set([orig_lang, ] + present_translations(text)))
-        temp_text_path = os.path.join(folder, f'{uid}.txt')
-        with open(temp_text_path, "w", encoding="utf-8") as f:
-            f.write(text)
-        zipped_text_file_name = r"script.txt"
-        for lang in present_langs:
-            voice = request.form.get(f"voice_{lang}")
-            engine = 'standard'
-            if voice in Mp3SrtSynth.neural_voices:
-                engine = 'neural'
-            converter.add_lang(voice_id=request.form.get(f"voice_{lang}"), short_lang_code=lang, engine=engine)
-            temp_mp3_paths[lang] = os.path.join(folder, f'{uid}_{lang}.mp3')
-            temp_srt_paths[lang] = os.path.join(folder, f'{uid}_{lang}.srt')
-            zipped_mp3_file_names[lang] = f'{lang}.mp3'
-            zipped_srt_file_names[lang] = f'{lang}.srt'
+            converter = Mp3SrtSynth(access_key_id=os.environ.get('polly_key_id'),
+                                    secret_access_key=os.environ.get('polly_secret_key'),
+                                    region=os.environ.get('polly_region'),
+                                    )
 
+            temp_mp3_paths = {}
+            temp_srt_paths = {}
+            zipped_mp3_file_names = {}
+            zipped_srt_file_names = {}
 
-        try:
-            converter.synthesize_all_langs(translations, temp_mp3_paths, temp_srt_paths)
-        except Exception as e:
-            return turbo.stream([
-                turbo.update(render_template("_makeit.html", making_error=f'Error: {e}'), target="makeit_frame")
-            ])
+            present_langs = list(set([orig_lang, ] + present_translations(text)))
+            temp_text_path = os.path.join(folder, f'{uid}.txt')
+            with open(temp_text_path, "w", encoding="utf-8") as f:
+                f.write(text)
+            zipped_text_file_name = r"script.txt"
+            for lang in present_langs:
+                voice = request.form.get(f"voice_{lang}")
+                engine = 'standard'
+                if voice in Mp3SrtSynth.neural_voices:
+                    engine = 'neural'
+                converter.add_lang(voice_id=request.form.get(f"voice_{lang}"), short_lang_code=lang, engine=engine)
+                temp_mp3_paths[lang] = os.path.join(folder, f'{uid}_{lang}.mp3')
+                temp_srt_paths[lang] = os.path.join(folder, f'{uid}_{lang}.srt')
+                zipped_mp3_file_names[lang] = f'{lang}.mp3'
+                zipped_srt_file_names[lang] = f'{lang}.srt'
 
-        pi.clear()
+            try:
+                converter.synthesize_all_langs(translations, temp_mp3_paths, temp_srt_paths)
+            except Exception as e:
+                return page_update_makeit(error=f'Error: {e}')
 
-        temp_files = list(temp_mp3_paths.values()) + list(temp_srt_paths.values()) + [temp_text_path,]
-        zipped_files = list(zipped_mp3_file_names.values()) + list(zipped_srt_file_names.values()) + [zipped_text_file_name,]
+            temp_files = list(temp_mp3_paths.values()) + list(temp_srt_paths.values()) + [temp_text_path, ]
+            zipped_files = list(zipped_mp3_file_names.values()) + list(zipped_srt_file_names.values()) + [
+                zipped_text_file_name, ]
 
-        create_zip_file(temp_zip, temp_files, zipped_files)
+            create_zip_file(temp_zip, temp_files, zipped_files)
 
-        # Return the file for download
-        formatted_datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            # Return the file for download
+            formatted_datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-        threading.Thread(target=remove_files_after_completion, args=(temp_files + [temp_zip],)).start()
+            threading.Thread(target=remove_files_after_completion, args=(temp_files + [temp_zip],)).start()
 
-        return turbo.stream([
-            turbo.update(render_template("_makeit.html",
-                                         download_file_path=os.path.basename(temp_zip),
-                                         download_name=f'mp3_srt_{formatted_datetime}.zip'
-                                         ),
-                         target="makeit_frame")
-        ])
-
-            # redirect(url_for('download', file_path=temp_zip, download_name=f'mp3_srt_{formatted_datetime}.zip'))
-        # return send_file(temp_zip, as_attachment=True, download_name=f'mp3_srt_{formatted_datetime}.zip')
+            return page_update_makeit(download_file_name= os.path.basename(temp_zip),
+                                      download_as_name=f'mp3_srt_{formatted_datetime}.zip')
 
     return render_template('index.html', text=None, present_langs=["EN"], orig_lang="EN", voices=voices,
                            supported_langs=supported_langs, error=None)
@@ -232,11 +161,12 @@ def change_orig_lang():
                                                voices=voices,
                                                supported_langs=supported_langs, error=None)})
 
+
 @app.route('/download/<filename>', methods=['GET'])
 def download(filename):
     uploads = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
-    return send_from_directory(uploads,  filename, as_attachment=True, download_name=request.args.get("name", "result.zip"))
-    # return send_file(file_path, as_attachment=True, download_name=download_name)
+    return send_from_directory(uploads, filename, as_attachment=True,
+                               download_name=request.args.get("name", "result.zip"))
 
 
 if __name__ == '__main__':
