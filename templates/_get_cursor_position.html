@@ -1,0 +1,17 @@
+<script>
+    function getCursorPos(textareaId) {
+        var textarea = document.getElementById(textareaId);
+
+        // Ensure the element is a textarea
+        //if (!textarea || textarea.tagName.toLowerCase() !== 'textarea') {
+        //    throw new Error('The passed id should correspond to a textarea element.');
+        //}
+
+        return textarea.selectionStart;
+    }
+    function updateCursorPos(updateElementId, textAreaId){
+        var pos = getCursorPos(textAreaId);
+        var updateField = document.getElementById(updateElementId);
+        updateField.value = getCursorPos(textAreaId)
+    }
+</script>

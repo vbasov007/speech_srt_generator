@@ -1,4 +1,5 @@
 import datetime
+import hashlib
 import os
 import threading
 import time
@@ -9,13 +10,11 @@ from flask import Flask, render_template, request, jsonify
 from flask import send_from_directory
 from turbo_flask import Turbo
 
+import utils
 from mp3_srt_synth import Mp3SrtSynth
 from multilang import split_translations, add_translation, present_translations
 from mylogger import mylog
-
 from turbo_webpage_elements import *
-
-# from progress_indicator import ProgressIndicator
 
 app = Flask(__name__)
 turbo = Turbo(app)
@@ -61,6 +60,10 @@ def home():
     if not os.path.exists(folder):
         os.makedirs(folder)
 
+    temp_static_folder = 'static/temp'
+    if not os.path.exists(temp_static_folder):
+        os.makedirs(temp_static_folder)
+
     uid = uuid.uuid4()
     temp_zip = os.path.join(folder, f'{uid}.zip')
     voices = Mp3SrtSynth.voices
@@ -94,8 +97,55 @@ def home():
             present_langs = list(set([orig_lang, ] + present_translations(text)))
 
             return page_update_on_add_translation_success(text=text, supported_langs=supported_langs,
-                                                          orig_lang=orig_lang,present_langs=present_langs,
+                                                          orig_lang=orig_lang, present_langs=present_langs,
                                                           voices=voices)
+        if request.form.get("play_current_line"):
+            try:
+                pos = int(request.form.get("cursor_position"))
+            except ValueError:
+                return turbo.stream([])
+
+            line_of_text = utils.get_line_by_pos(text, pos)
+            translations = split_translations(line_of_text, orig_lang,
+                                              present_translations(line_of_text),
+                                              ignore_codes=True)
+
+            if len(translations.values()) < 1:
+                return page_update_on_text_error("No pronounceable content in the selected line.")
+
+            text_to_play = list(translations.values())[0]
+            if len(text_to_play.strip()) < 1:
+                return page_update_on_text_error("No pronounceable content in the selected line.")
+            lang = list(translations.keys())[0]
+
+            voice = request.form.get(f"voice_{lang}")
+
+            # unique file name for string plus voice id
+            fn = hashlib.sha256((text_to_play + voice).encode()).hexdigest()
+            temp_file_path = os.path.join(temp_static_folder, f'{fn}.mp3')
+
+            if not os.path.exists(temp_file_path):
+
+                engine = 'standard'
+                if voice in Mp3SrtSynth.neural_voices:
+                    engine = 'neural'
+                converter = Mp3SrtSynth(access_key_id=os.environ.get('polly_key_id'),
+                                        secret_access_key=os.environ.get('polly_secret_key'),
+                                        region=os.environ.get('polly_region'),
+                                        )
+                converter.add_lang(voice_id=voice, short_lang_code=lang, engine=engine)
+                try:
+                    converter.synth_mp3(text=text_to_play, mp3_file_path=temp_file_path, short_lang_code=lang)
+                except Exception as e:
+                    if os.path.exists(temp_file_path):
+                        os.remove(temp_file_path)
+                    return page_update_on_text_error(error=f"Error detected in the text."
+                                                           f"Please ensure the SSML syntax in the current"
+                                                           f" line is correct.")
+
+            threading.Thread(target=remove_files_after_completion, args=([temp_file_path,], )).start()
+
+            return page_update_line_player(file_name_mp3=os.path.basename(temp_file_path))
 
         if request.form.get("makeit"):
 
@@ -105,7 +155,6 @@ def home():
                                     secret_access_key=os.environ.get('polly_secret_key'),
                                     region=os.environ.get('polly_region'),
                                     )
-
             temp_mp3_paths = {}
             temp_srt_paths = {}
             zipped_mp3_file_names = {}
@@ -143,11 +192,11 @@ def home():
 
             threading.Thread(target=remove_files_after_completion, args=(temp_files + [temp_zip],)).start()
 
-            return page_update_makeit(download_file_name= os.path.basename(temp_zip),
+            return page_update_makeit(download_file_name=os.path.basename(temp_zip),
                                       download_as_name=f'mp3_srt_{formatted_datetime}.zip')
 
     return render_template('index.html', text=None, present_langs=["EN"], orig_lang="EN", voices=voices,
-                           supported_langs=supported_langs, error=None)
+                           supported_langs=supported_langs, error=None, file_name_mp3=None)
 
 
 @app.route('/change_orig_lang', methods=['GET', 'POST'])

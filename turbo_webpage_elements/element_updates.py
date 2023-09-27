@@ -2,7 +2,11 @@ from .generic_update import generic_update
 
 
 def update_textarea(text):
-    return generic_update("_textarea.html", "textarea_frame", render=True, text=text)
+    return generic_update("_textarea.html", target="textarea_frame", render=True, text=text)
+
+
+def update_text_error(error):
+    return generic_update("_text_error.html", target="text_error_frame", text_error=error)
 
 
 def update_select_orig_lang(supported_langs: list, orig_lang: str, disabled_orig_lang_change):
@@ -37,3 +41,7 @@ def update_add_translation(supported_langs, present_langs, message):
                           present_langs=present_langs,
                           translation_message=message
                           )
+
+
+def update_line_player(file_name_mp3):
+    return generic_update("_line_player.html", "_line_player", file_name_mp3=file_name_mp3)

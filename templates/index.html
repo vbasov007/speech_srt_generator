@@ -3,6 +3,7 @@
 <head>
     {% include "_init_bootstrap.html" %}
     {% include "_styles.html" %}
+    {% include "_get_cursor_position.html" %}
 
     <title>Voiceover Assistant</title>
 
@@ -17,7 +18,13 @@
 
     <br><br>
 
-    <form action="/" method="post">
+    <form action="/" method="post" onsubmit="updateCursorPos('cursor_position', 'textarea')">
+
+        <input type="hidden" id="cursor_position" name="cursor_position">
+
+        <turbo-frame id="_line_player">
+            {% include "_line_player.html" %}
+        </turbo-frame>
 
         <turbo-frame id="set_orig_lang_frame">
             {% include "_set_orig_lang.html" %}
@@ -38,10 +45,15 @@
         <br><br>
 
         <h3>Step 2: Write text script</h3>
-
+        {% include "ssml_reference.html" %}
+        <turbo-frame id="text_error_frame">
+            {% include "_text_error.html" %}
+        </turbo-frame>
         <turbo-frame id="textarea_frame">
             {% include "_textarea.html" %}
         </turbo-frame>
+
+        <input class="p-2 btn-primary" type="submit" accesskey="p" value="Play current line (Alt-P)" name="play_current_line" id="play_current_line" >
         <br><br>
         <h3>Step 3: Add translations</h3>
         <div class="inline-inside-block">

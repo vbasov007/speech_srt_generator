@@ -41,7 +41,21 @@ def page_update_on_add_translation_success(text: str, supported_langs: list, ori
                              voices=voices)
     ])
 
+
 def page_update_makeit(download_file_name="", download_as_name="", error=""):
     return turbo.stream([
         update_makeit(making_error=error, download_file_name=download_file_name, download_as_name=download_as_name)
+    ])
+
+
+def page_update_line_player(file_name_mp3):
+    return turbo.stream([
+        update_line_player(file_name_mp3=file_name_mp3),
+        update_text_error(error=None)
+    ])
+
+
+def page_update_on_text_error(error):
+    return turbo.stream([
+        update_text_error(error=error)
     ])

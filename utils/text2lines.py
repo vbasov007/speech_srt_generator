@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 from utils import string_to_ms
 
 
@@ -67,3 +67,12 @@ def lines2ssml(lines: List[ScriptLine]) -> str:
     return f'<speak>{res}</speak>'
 
 
+def get_line_by_pos(text: str, pos) -> Optional[str]:
+    lines = text.split("\n")
+    current_pos = 0
+    for line in lines:
+        if current_pos + len(line) >= pos:
+            return line
+        else:
+            current_pos += len(line) + 1  # +1 for the '\n' character
+    return None

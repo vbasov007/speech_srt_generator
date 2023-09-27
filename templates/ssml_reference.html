@@ -1,0 +1,48 @@
+    <div class="container">
+        <div class="row">
+{#            <div class="col-md-12">#}
+{#                <p>#}
+                    <a class="btn btn-primary" data-toggle="collapse" href="#script_help" role="button" aria-expanded="false" aria-controls="collapseExample">
+                        Refer to the guide for special codes and SSML usage
+                    </a>
+{#                </p>#}
+                <div class="collapse" id="script_help">
+                    <div class="card card-body">
+                        <pre>
+                            <code>
+It's useful to start a video script with some extra lines that will be removed later, to help with synchronization with the video's start.
+For instance, you could include a countdown like:
+
+3
+2
+1
+
+Always insert pauses between the lines like in the line below:
+#2000
+They assist you in keeping pace with the voice-over during video recording.
+Unnecessary pauses can be easily removed from the completed video in any video editor.
+To insert pauses between lines, write a code of form #2000 on a separate line. The number represents the pause duration in milliseconds.
+In this way, #2000 corresponds to a 2-second pause. #3500 would be 3.5-second pause.
+You can specify the exact time for any line to kick in.
+For that, you use codes such as "#00:05:30,500" on a separate line.
+This indicates that the next line will start precisely 5 minutes and 30.5 seconds from the beginning of the video.
+
+Use Speech Synthesis Markup Language (SSML) when necessary.
+It helps in pronouncing abbreviations, speaking words in a different language, or creating a pause within a sentence.
+Supported SSML tags match to Amazon AWS Polly rules.
+
+See some examples:
+
+Hello there.&ltbreak time="2s"/&gt How are you today?
+I can speak French. &ltlang xml:lang="fr-FR"&gtJe ne parle pas français.&lt/lang&gt
+You say, &ltphoneme alphabet="ipa" ph="pɪˈkɑːn"&gtpecan&lt/phoneme&gt.
+I say, &ltphoneme alphabet="ipa" ph="ˈpi.kæn"&gtpecan&lt/phoneme&gt.
+2 devided by 9 is pronounced &ltsay-as interpret-as="fraction"&gt2/9&lt/say-as&gt.
+&ltsay-as interpret-as="characters"&gtICP&lt/say-as&gt is the abbreviation for Infineon Cloud Platform.
+                            </code>
+                        </pre>
+                    </div>
+                </div>
+{#            </div>#}
+        </div>
+    </div>

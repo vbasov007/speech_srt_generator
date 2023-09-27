@@ -1,8 +1,8 @@
-from typing import List, Callable, Optional
+from typing import List
 
 from multilang import Translation
-from .translator_url_key import translator_url_key
 from utils import string_to_ms
+from .translator_url_key import translator_url_key
 
 
 def add_translation(text, target_lang, source_lang, startswith_symb="#", block_visual_splitter="---",
@@ -64,8 +64,8 @@ def present_translations(text, startswith_symb="#") -> List[str]:
     return list(set(matches))
 
 
-
-def split_translations(text, orig_lang, langs: list, startswith_symb="#", block_visual_splitter="---") -> dict:
+def split_translations(text, orig_lang, langs: list, startswith_symb="#", block_visual_splitter="---",
+                       ignore_codes=False) -> dict:
     res = {}
     langs = list(set([orig_lang, ] + langs))
     lang_lines = {key: [] for key in langs}
@@ -85,7 +85,7 @@ def split_translations(text, orig_lang, langs: list, startswith_symb="#", block_
         # add pause markers end time markers to all languages
         if line.startswith(startswith_symb):
             val = line[len(startswith_symb):]
-            if val.strip().isnumeric() or (string_to_ms(val) is not None):
+            if (val.strip().isnumeric() or (string_to_ms(val) is not None)) and not ignore_codes:
                 for key in lang_lines.keys():
                     lang_lines[key].append(line)
                 continue
@@ -101,6 +101,8 @@ def split_translations(text, orig_lang, langs: list, startswith_symb="#", block_
             if line.startswith(lang_prefix):
                 lang_lines[key].append(line[len(lang_prefix):].strip())
                 break
+
+    lang_lines = {key: text for key, text in lang_lines.items() if text}
 
     # transform to result dict with values as strings
     for key in lang_lines.keys():
