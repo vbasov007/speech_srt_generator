@@ -214,7 +214,8 @@ def change_orig_lang():
 
 @app.route('/download/<filename>', methods=['GET'])
 def download(filename):
-    uploads = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
+    # uploads = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
+    uploads = os.path.join(app.root_path, "output")
     return send_from_directory(uploads, filename, as_attachment=True,
                                download_name=request.args.get("name", "result.zip"))
 
