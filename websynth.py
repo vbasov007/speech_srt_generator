@@ -201,7 +201,7 @@ def download(filename):
                                download_name=request.args.get("name", "result.zip"))
 
 
-from test_external_services import test_polly, test_translator
+from test_external_services import test_polly, test_translator, check_folder_access
 
 @app.route('/status', methods=['GET', 'POST'])
 def status():
@@ -212,6 +212,13 @@ def status():
     hide_secrets['translator_key'] = secret_key[:4] + '*' * (len(secret_key) - 8) + secret_key[-4:]
     secret_key = hide_secrets['polly_key_id']
     hide_secrets['polly_key_id'] = secret_key[:4] + '*' * (len(secret_key) - 8) + secret_key[-4:]
+
+    hide_secrets["abspath for temp_file_folder"] = os.path.abspath(hide_secrets['temp_file_folder'])
+    hide_secrets["Access to temp_file_folder"] = check_folder_access(hide_secrets["abspath for temp_file_folder"])
+    hide_secrets["abspath for temp_play_folder"] = os.path.abspath(hide_secrets['temp_play_folder'])
+    hide_secrets["Access to temp_play_folder"] = check_folder_access(hide_secrets["abspath for temp_play_folder"])
+
+
     if request.method == 'POST':
         if request.form.get("test_polly"):
             test_result = test_polly()

@@ -1,8 +1,10 @@
+import os
+
 import boto3
 
 import env
+from multilang import Translation
 
-from  multilang import Translation
 
 def test_polly():
     try:
@@ -24,17 +26,35 @@ def test_polly():
         return f'Exception in response: {str(e)}'
 
     if "AudioStream" in response:
-        return("Connection Successful")
+        return ("Connection Successful")
     else:
-        return("Connection Failed")
+        return ("Connection Failed")
+
 
 def test_translator():
-    tr = Translation(env.environ['translator_url'],env.environ['translator_key'],
+    tr = Translation(env.environ['translator_url'], env.environ['translator_key'],
                      verify=env.environ['ignore_translator_ssl_cert'])
 
     try:
-        res = tr.translate_text("Hi", target_lang="DE", source_lang="EN" )
+        res = tr.translate_text("Hi", target_lang="DE", source_lang="EN")
     except Exception as e:
         return f"Failed: {str(e)}"
 
     return f"Success: Hi -> {res}"
+
+
+def check_folder_access(folder_path):
+    if not os.path.exists(folder_path):
+        return f"Directory does not exist."
+
+    can_read = os.access(folder_path, os.R_OK)
+    can_write = os.access(folder_path, os.W_OK)
+
+    if can_read and can_write:
+        return "Read Write"
+    elif can_read:
+        return "Read Only"
+    elif can_write:
+        return "Write Only"
+    else:
+        return "No Read, No Write"
