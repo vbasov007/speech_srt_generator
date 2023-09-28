@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% include "_init_bootstrap.html" %}
+    {% include "_styles.html" %}
+
+    <title>status</title>
+
+</head>
+<body>
+    <div class="container">
+        <table>
+            <thead>
+            <tr>
+                <th>
+                    Environment variable name&nbsp;&nbsp;&nbsp;
+                </th>
+                <th>
+                    Value
+                </th>
+            </tr>
+            </thead>
+            {% for key, val in environ.items() %}
+                <tr>
+                    <td>{{ key }}</td><td>{{ val }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    <br>
+    <form action="/status" method="post">
+            <input type="submit" class="btn-danger" name="test_polly" value="TEST AWS POLLY">
+            <div id="aws_polly_test_result">
+                {{ aws_polly_test_result }}
+            </div>
+            <br>
+            <input type="submit" class="btn-danger" name="test_translator" value="TEST TRANSLATOR">
+            <div id="translator_test_result">
+                {{ translator_test_result }}
+            </div>
+    </form>
+    </div>
+</body>
+</html>

@@ -2,50 +2,21 @@ import datetime
 import hashlib
 import os
 import threading
-import time
 import uuid
-import zipfile
 
 from flask import Flask, render_template, request, jsonify
 from flask import send_from_directory
 from turbo_flask import Turbo
 
 import utils
+from env import environ
 from mp3_srt_synth import Mp3SrtSynth
 from multilang import split_translations, add_translation, present_translations
-from mylogger import mylog
-
 
 app = Flask(__name__)
 turbo = Turbo(app)
 
 from turbo_webpage_elements import *
-
-def create_zip_file(zip_file_path, file_paths: list, zipped_file_names: list = None):
-    with zipfile.ZipFile(zip_file_path, 'w') as zip_file:
-
-        if zipped_file_names is None:
-            zipped_file_names = [os.path.basename(file_path) for file_path in file_paths]
-
-        for file_path, zipped_name in zip(file_paths, zipped_file_names):
-            zip_file.write(file_path, zipped_name)
-
-
-def remove_files_after_completion(file_paths: list, delay: int = 600, repeat: int = 10):
-    not_deleted = file_paths.copy()
-    for i in range(repeat):
-        if len(not_deleted) == 0:
-            break
-        time.sleep(delay)
-        remaining = not_deleted.copy()
-        for f in remaining:
-            try:
-                os.remove(f)
-            except Exception as e:
-                mylog.error(f'Failed to remove {f}: {e}')
-            else:
-                mylog.info(f'Removed {f}')
-                not_deleted.remove(f)
 
 
 @app.route('/help')
@@ -93,7 +64,9 @@ def home():
                                                                      f' or is the original language')
 
             text = add_translation(text, new_lang, orig_lang,
-                                   verify_cert=not bool(os.environ.get('ignore_translator_ssl_cert', False)))
+                                   url=environ.get('translator_url'),
+                                   key=environ.get('translator_key'),
+                                   verify_cert=not bool(environ.get('ignore_translator_ssl_cert', False)))
 
             present_langs = list(set([orig_lang, ] + present_translations(text)))
 
@@ -130,9 +103,9 @@ def home():
                 engine = 'standard'
                 if voice in Mp3SrtSynth.neural_voices:
                     engine = 'neural'
-                converter = Mp3SrtSynth(access_key_id=os.environ.get('polly_key_id'),
-                                        secret_access_key=os.environ.get('polly_secret_key'),
-                                        region=os.environ.get('polly_region'),
+                converter = Mp3SrtSynth(access_key_id=environ.get('polly_key_id'),
+                                        secret_access_key=environ.get('polly_secret_key'),
+                                        region=environ.get('polly_region'),
                                         )
                 converter.add_lang(voice_id=voice, short_lang_code=lang, engine=engine)
                 try:
@@ -140,11 +113,13 @@ def home():
                 except Exception as e:
                     if os.path.exists(temp_file_path):
                         os.remove(temp_file_path)
-                    return page_update_on_text_error(error=f"Error detected in the text."
-                                                           f"Please ensure the SSML syntax in the current"
-                                                           f" line is correct.")
+                    if "ssml" in str(e).lower():
+                        return page_update_on_text_error(error=f'It appears that there is an error'
+                                                               f'in the SSML syntax within the "{text_to_play}"')
+                    else:
+                        return page_update_on_text_error(error=f'Error: {str(e)}')
 
-            threading.Thread(target=remove_files_after_completion, args=([temp_file_path,], )).start()
+            threading.Thread(target=utils.remove_files_after_completion, args=([temp_file_path, ],)).start()
 
             return page_update_line_player(file_name_mp3=os.path.basename(temp_file_path))
 
@@ -152,9 +127,9 @@ def home():
 
             translations = split_translations(text, orig_lang, present_translations(text))
 
-            converter = Mp3SrtSynth(access_key_id=os.environ.get('polly_key_id'),
-                                    secret_access_key=os.environ.get('polly_secret_key'),
-                                    region=os.environ.get('polly_region'),
+            converter = Mp3SrtSynth(access_key_id=environ.get('polly_key_id'),
+                                    secret_access_key=environ.get('polly_secret_key'),
+                                    region=environ.get('polly_region'),
                                     )
             temp_mp3_paths = {}
             temp_srt_paths = {}
@@ -180,18 +155,24 @@ def home():
             try:
                 converter.synthesize_all_langs(translations, temp_mp3_paths, temp_srt_paths)
             except Exception as e:
-                return page_update_makeit(error=f'Error: {e}')
+                if "ssml" in str(e).lower():
+                    return page_update_makeit(error='It seems that there might be a mistake'
+                                                    ' in the SSML syntax within your input. '
+                                                    'To pinpoint the error line, you could try playing each'
+                                                    ' line individually using the "Play current line" button.')
+                else:
+                    return page_update_makeit(error=f'Error: {e}')
 
             temp_files = list(temp_mp3_paths.values()) + list(temp_srt_paths.values()) + [temp_text_path, ]
             zipped_files = list(zipped_mp3_file_names.values()) + list(zipped_srt_file_names.values()) + [
                 zipped_text_file_name, ]
 
-            create_zip_file(temp_zip, temp_files, zipped_files)
+            utils.create_zip_file(temp_zip, temp_files, zipped_files)
 
             # Return the file for download
             formatted_datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-            threading.Thread(target=remove_files_after_completion, args=(temp_files + [temp_zip],)).start()
+            threading.Thread(target=utils.remove_files_after_completion, args=(temp_files + [temp_zip],)).start()
 
             return page_update_makeit(download_file_name=os.path.basename(temp_zip),
                                       download_as_name=f'mp3_srt_{formatted_datetime}.zip')
@@ -218,6 +199,29 @@ def download(filename):
     uploads = os.path.join(app.root_path, "output")
     return send_from_directory(uploads, filename, as_attachment=True,
                                download_name=request.args.get("name", "result.zip"))
+
+
+from test_external_services import test_polly, test_translator
+
+@app.route('/status', methods=['GET', 'POST'])
+def status():
+    hide_secrets = environ.copy()
+    secret_key = hide_secrets['polly_secret_key']
+    hide_secrets['polly_secret_key'] = secret_key[:4] + '*' * (len(secret_key) - 8) + secret_key[-4:]
+    secret_key = hide_secrets['translator_key']
+    hide_secrets['translator_key'] = secret_key[:4] + '*' * (len(secret_key) - 8) + secret_key[-4:]
+    secret_key = hide_secrets['polly_key_id']
+    hide_secrets['polly_key_id'] = secret_key[:4] + '*' * (len(secret_key) - 8) + secret_key[-4:]
+    if request.method == 'POST':
+        if request.form.get("test_polly"):
+            test_result = test_polly()
+            return render_template("status.html", environ=hide_secrets, aws_polly_test_result=test_result,
+                                   translator_test_result="")
+        if request.form.get('test_translator'):
+            test_result = test_translator()
+            return render_template("status.html", environ=hide_secrets, aws_polly_test_result="",
+                                   translator_test_result=test_result)
+    return render_template("status.html", environ=hide_secrets, aws_polly_test_result="", translator_test_result="")
 
 
 if __name__ == '__main__':
