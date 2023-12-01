@@ -70,6 +70,7 @@ def home():
 
             present_langs = list(set([orig_lang, ] + present_translations(text)))
 
+            text = utils.unescape_xml_chars(text)
             return page_update_on_add_translation_success(text=text, supported_langs=supported_langs,
                                                           orig_lang=orig_lang, present_langs=present_langs,
                                                           voices=voices)
@@ -80,6 +81,8 @@ def home():
                 return turbo.stream([])
 
             line_of_text = utils.get_line_by_pos(text, pos)
+            line_of_text = utils.escape_xml_reserved_chars(line_of_text)
+
             translations = split_translations(line_of_text, orig_lang,
                                               present_translations(line_of_text),
                                               ignore_codes=True)
@@ -88,6 +91,7 @@ def home():
                 return page_update_on_text_error("No pronounceable content in the selected line.")
 
             text_to_play = list(translations.values())[0]
+
             if len(text_to_play.strip()) < 1:
                 return page_update_on_text_error("No pronounceable content in the selected line.")
             lang = list(translations.keys())[0]
@@ -125,6 +129,7 @@ def home():
 
         if request.form.get("makeit"):
 
+            text = utils.escape_xml_reserved_chars(text)
             translations = split_translations(text, orig_lang, present_translations(text))
 
             converter = Mp3SrtSynth(access_key_id=environ.get('polly_key_id'),
@@ -203,6 +208,7 @@ def download(filename):
 
 from test_external_services import test_polly, test_translator, check_folder_access
 
+
 @app.route('/status', methods=['GET', 'POST'])
 def status():
     hide_secrets = environ.copy()
@@ -217,7 +223,6 @@ def status():
     hide_secrets["Access to temp_file_folder"] = check_folder_access(hide_secrets["abspath for temp_file_folder"])
     hide_secrets["abspath for temp_play_folder"] = os.path.abspath(hide_secrets['temp_play_folder'])
     hide_secrets["Access to temp_play_folder"] = check_folder_access(hide_secrets["abspath for temp_play_folder"])
-
 
     if request.method == 'POST':
         if request.form.get("test_polly"):

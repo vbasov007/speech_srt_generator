@@ -3,3 +3,4 @@ from .misc_utils import split, set_lang, is_cyr, say_ru_if_cyr, text_to_ssml,\
 from .text2lines import text2lines, ScriptLine, get_line_by_pos
 from .zip import create_zip_file
 from .temp_files_cleaning import remove_files_after_completion
+from .replace_xml_reserved_chars import escape_xml_reserved_chars, unescape_xml_chars

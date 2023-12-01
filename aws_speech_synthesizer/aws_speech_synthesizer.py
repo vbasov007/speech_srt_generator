@@ -3,6 +3,7 @@ import json
 import boto3
 
 from utils.misc_utils import speech_marks_to_srt, text_to_ssml
+from utils.replace_xml_reserved_chars import unescape_xml_chars
 
 from mylogger import mylog
 
@@ -60,6 +61,7 @@ class AwsSpeechSynthesizer:
 
         if srt_out is not None:
             srt = speech_marks_to_srt(self.synth_speech_marks(ssml), srt_out)
+            srt=unescape_xml_chars(srt)
             srt_out.write(srt)
 
     def duration(self, frase):

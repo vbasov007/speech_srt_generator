@@ -35,10 +35,13 @@ def test_translator():
     tr = Translation(env.environ['translator_url'], env.environ['translator_key'],
                      verify=env.environ['ignore_translator_ssl_cert'])
 
+    res=""
     try:
         res = tr.translate_text("Hi", target_lang="DE", source_lang="EN")
     except Exception as e:
-        return f"Failed: {str(e)}"
+        if len(res) > 0:
+            return f"Success: Hi -> {res}, Warning: str(e)"
+        return f"Error: {str(e)}"
 
     return f"Success: Hi -> {res}"
 
