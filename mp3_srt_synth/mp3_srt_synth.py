@@ -67,24 +67,24 @@ class Mp3SrtSynth:
                                                                    language_code=self.long_lang_code[short_lang_code],
                                                                    )
 
-    def _calc_adjustments_old(self, translations: Dict[str, str]) -> Dict[str, List[ScriptLine]]:
-        lines: Dict[str, List[ScriptLine]] = {}
-        for short_lang_code, text in translations.items():
-            lines[short_lang_code] = text2lines(text)
-            for line in lines[short_lang_code]:
-                if line.type == 'sentence':
-                    line.time_to_next = self._synthesizers[short_lang_code].duration(line.value)
-
-        keys = list(lines.keys())
-        for i, v in enumerate(zip(*lines.values())):
-            if v[0].type != 'sentence':
-                continue
-            max_duration = max(x.time_to_next for x in v)
-            rs = [max_duration - x.time_to_next for x in v]
-            for l, r in zip(keys, rs):
-                lines[l][i].adjustment = r
-
-        return lines
+    # def _calc_adjustments_old(self, translations: Dict[str, str]) -> Dict[str, List[ScriptLine]]:
+    #     lines: Dict[str, List[ScriptLine]] = {}
+    #     for short_lang_code, text in translations.items():
+    #         lines[short_lang_code] = text2lines(text)
+    #         for line in lines[short_lang_code]:
+    #             if line.type == 'sentence':
+    #                 line.time_to_next = self._synthesizers[short_lang_code].duration(line.value)
+    #
+    #     keys = list(lines.keys())
+    #     for i, v in enumerate(zip(*lines.values())):
+    #         if v[0].type != 'sentence':
+    #             continue
+    #         max_duration = max(x.time_to_next for x in v)
+    #         rs = [max_duration - x.time_to_next for x in v]
+    #         for l, r in zip(keys, rs):
+    #             lines[l][i].adjustment = r
+    #
+    #     return lines
 
     def _calc_adjustments(self, translations: Dict[str, str]) -> Dict[str, List[ScriptLine]]:
         lines: Dict[str, List[ScriptLine]] = {}
@@ -126,20 +126,20 @@ class Mp3SrtSynth:
 
         return lines
 
-    def synth_mp3_srt(self, lines: List[ScriptLine], mp3_file_path, srt_file_path, short_lang_code):
+    def synth_mp3_srt_to_files(self, lines: List[ScriptLine], mp3_file_path, srt_file_path, short_lang_code):
         ssml = lines2ssml(lines)
         with open(mp3_file_path, 'wb') as mp3_out, open(srt_file_path, 'w', encoding='utf-8') as srt_out:
             srt_out.write(codecs.BOM_UTF8.decode('utf-8'))
-            self._synthesizers[short_lang_code].synthesize(text=ssml, mp3_out=mp3_out, srt_out=srt_out, ssml_input=True)
+            self._synthesizers[short_lang_code].synth_speech_and_subtitles_to_files(text=ssml, mp3_out=mp3_out, srt_out=srt_out, ssml_input=True)
 
-    def synth_mp3(self, text, mp3_file_path, short_lang_code):
-        ssml = f'<speak>{text}</speak>'
+    def synth_one_phrase_mp3_to_file(self, text, mp3_file_path, short_lang_code):
+        # ssml = f'<speak>{text}</speak>'
         with open(mp3_file_path, 'wb') as mp3_out:
-            self._synthesizers[short_lang_code].synthesize(text=ssml, mp3_out=mp3_out, ssml_input=True)
+            self._synthesizers[short_lang_code].synth_speech_and_subtitles_to_files(text=text, mp3_out=mp3_out, ssml_input=True)
 
     def synthesize_all_langs(self, translations: Dict[str, str],
                              mp3_file_paths: Dict[str, str], srt_file_paths: Dict[str, str]):
 
         adjusted = self._calc_adjustments(translations)
         for short_lang_code, lines in adjusted.items():
-            self.synth_mp3_srt(lines, mp3_file_paths[short_lang_code], srt_file_paths[short_lang_code], short_lang_code)
+            self.synth_mp3_srt_to_files(lines, mp3_file_paths[short_lang_code], srt_file_paths[short_lang_code], short_lang_code)

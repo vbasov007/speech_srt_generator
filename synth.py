@@ -129,7 +129,7 @@ def converter(args, text=None, output_folder=None, mp3_file=None, srt_file=None,
 
         ssml = lines2ssml(lines)
         srt_out.write(codecs.BOM_UTF8.decode('utf-8'))
-        synth.synthesize(text=ssml, mp3_out=mp3_out, srt_out=srt_out, ssml_input=True)
+        synth.synth_speech_and_subtitles_to_files(text=ssml, mp3_out=mp3_out, srt_out=srt_out, ssml_input=True)
 
 
 def main():

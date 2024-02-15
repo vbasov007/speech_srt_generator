@@ -113,7 +113,7 @@ def home():
                                         )
                 converter.add_lang(voice_id=voice, short_lang_code=lang, engine=engine)
                 try:
-                    converter.synth_mp3(text=text_to_play, mp3_file_path=temp_file_path, short_lang_code=lang)
+                    converter.synth_one_phrase_mp3_to_file(text=text_to_play, mp3_file_path=temp_file_path, short_lang_code=lang)
                 except Exception as e:
                     if os.path.exists(temp_file_path):
                         os.remove(temp_file_path)

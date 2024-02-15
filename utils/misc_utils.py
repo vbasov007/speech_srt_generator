@@ -37,8 +37,8 @@ def text_to_ssml(text: str, speech_style: str = None, repeat_delay_ms_per_symb=1
             continue
 
         res += f'<s>{say_ru_if_cyr(line)}</s>\n'
-    return f'<speak>{res}</speak>'
-
+    # return f'<speak>{res}</speak>'
+    return res
 
 def tf(delta_ms: int) -> str:
     """
