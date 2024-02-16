@@ -24,6 +24,7 @@ pefile==2023.2.7
 priority==2.0.0
 pyinstaller==5.13.0
 pyinstaller-hooks-contrib==2023.6
+pymp3==0.1.9
 python-dateutil==2.8.2
 pywin32-ctypes==0.2.2
 PyYAML==6.0.1
