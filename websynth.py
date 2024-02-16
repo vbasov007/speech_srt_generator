@@ -91,6 +91,7 @@ def home():
                 return page_update_on_text_error("No pronounceable content in the selected line.")
 
             text_to_play = list(translations.values())[0]
+            text_to_play = f'<s>{text_to_play}</s>'
 
             if len(text_to_play.strip()) < 1:
                 return page_update_on_text_error("No pronounceable content in the selected line.")

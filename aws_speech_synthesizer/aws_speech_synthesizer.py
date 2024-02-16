@@ -64,6 +64,8 @@ class AwsSpeechSynthesizer:
             if is_sentence(line):
                 sentence_count += 1
             if sentence_count >= max_sentences_per_batch or (i == len(lines) - 1):
+                if len(batch_lines) == 1:
+                    batch_lines.append("")
                 speech_marks = self._get_batch_speech_marks("\n".join(batch_lines))
                 speech_chunk = self._get_speech_chunk("\n".join(batch_lines[:-1]), output_format="pcm",
                                                       sample_rate_hz=sample_rate_hz)
