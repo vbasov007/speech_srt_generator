@@ -91,7 +91,6 @@ def home():
                 return page_update_on_text_error("No pronounceable content in the selected line.")
 
             text_to_play = list(translations.values())[0]
-            text_to_play = f'<s>{text_to_play}</s>'
 
             if len(text_to_play.strip()) < 1:
                 return page_update_on_text_error("No pronounceable content in the selected line.")
@@ -114,7 +113,7 @@ def home():
                                         )
                 converter.add_lang(voice_id=voice, short_lang_code=lang, engine=engine)
                 try:
-                    converter.synth_one_phrase_mp3_to_file(text=text_to_play, mp3_file_path=temp_file_path, short_lang_code=lang)
+                    converter.synth_mp3(text=text_to_play, mp3_file_path=temp_file_path, short_lang_code=lang)
                 except Exception as e:
                     if os.path.exists(temp_file_path):
                         os.remove(temp_file_path)

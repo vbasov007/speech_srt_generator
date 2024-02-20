@@ -64,8 +64,7 @@ def lines2ssml(lines: List[ScriptLine]) -> str:
         else:
             res += f'<s>{line.value}</s>\n'
 
-    # return f'<speak>{res}</speak>'
-    return res
+    return f'<speak>{res}</speak>'
 
 
 def get_line_by_pos(text: str, pos) -> Optional[str]:
