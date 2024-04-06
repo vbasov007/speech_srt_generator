@@ -57,7 +57,13 @@ class Mp3SrtSynth:
         self._region = region
         self._synthesizers: Dict[str, AwsSpeechSynthesizer] = {}
 
-    def add_lang(self, voice_id, short_lang_code, speech_style="conversational", engine="neural"):
+    def add_lang(self, voice_id, short_lang_code, speech_style="conversational", engine=None):
+        if engine is None:
+            if voice_id in self.neural_voices:
+                engine = 'neural'
+            else:
+                engine = "standard"
+
         self._synthesizers[short_lang_code] = AwsSpeechSynthesizer(access_key_id=self._access_key_id,
                                                                    secret_access_key=self._secret_access_key,
                                                                    region_name=self._region,
@@ -66,25 +72,6 @@ class Mp3SrtSynth:
                                                                    speech_style=speech_style,
                                                                    language_code=self.long_lang_code[short_lang_code],
                                                                    )
-
-    # def _calc_adjustments_old(self, translations: Dict[str, str]) -> Dict[str, List[ScriptLine]]:
-    #     lines: Dict[str, List[ScriptLine]] = {}
-    #     for short_lang_code, text in translations.items():
-    #         lines[short_lang_code] = text2lines(text)
-    #         for line in lines[short_lang_code]:
-    #             if line.type == 'sentence':
-    #                 line.time_to_next = self._synthesizers[short_lang_code].duration(line.value)
-    #
-    #     keys = list(lines.keys())
-    #     for i, v in enumerate(zip(*lines.values())):
-    #         if v[0].type != 'sentence':
-    #             continue
-    #         max_duration = max(x.time_to_next for x in v)
-    #         rs = [max_duration - x.time_to_next for x in v]
-    #         for l, r in zip(keys, rs):
-    #             lines[l][i].adjustment = r
-    #
-    #     return lines
 
     def _calc_adjustments(self, translations: Dict[str, str]) -> Dict[str, List[ScriptLine]]:
         lines: Dict[str, List[ScriptLine]] = {}
@@ -110,7 +97,7 @@ class Mp3SrtSynth:
             for line in lines[k]:
                 if line.type == 'sentence':
                     line.adjustment = sentences[k][i].adjustment
-                    i+=1
+                    i += 1
 
         # apply absolute timings
         for k in keys:
@@ -138,8 +125,20 @@ class Mp3SrtSynth:
             self._synthesizers[short_lang_code].synth_speech_and_subtitles_to_files(text=text, mp3_out=mp3_out, ssml_input=True)
 
     def synthesize_all_langs(self, translations: Dict[str, str],
-                             mp3_file_paths: Dict[str, str], srt_file_paths: Dict[str, str]):
+                             mp3_file_paths: Dict[str, str], srt_file_paths: Dict[str, str],
+                             report_progress: Optional[Callable] = None):
+        def rp(val):
+            if report_progress:
+                report_progress(val)
 
         adjusted = self._calc_adjustments(translations)
+
+        rp(0.1)
+
+        num_of_lang = len(adjusted)
+        count = 0
         for short_lang_code, lines in adjusted.items():
-            self.synth_mp3_srt_to_files(lines, mp3_file_paths[short_lang_code], srt_file_paths[short_lang_code], short_lang_code)
+            self.synth_mp3_srt_to_files(lines, mp3_file_paths[short_lang_code],
+                                        srt_file_paths[short_lang_code], short_lang_code)
+            count += 1
+            rp(count/num_of_lang)

@@ -18,17 +18,11 @@
 
     <br><br>
 
+    {{ page.incl_line_player() | safe }}
     <form action="/" method="post" onsubmit="updateCursorPos('cursor_position', 'textarea')">
-
         <input type="hidden" id="cursor_position" name="cursor_position">
+        {{ page.embedded_context_frame() | safe }}
 
-        <turbo-frame id="_line_player">
-            {% include "_line_player.html" %}
-        </turbo-frame>
-
-        <turbo-frame id="set_orig_lang_frame">
-            {% include "_set_orig_lang.html" %}
-        </turbo-frame>
 
         <input type="submit" class="btn-danger" name="reset" value="CLEAR THE FORM AND START OVER" style="background-color: red; color: white;">
 
@@ -38,46 +32,33 @@
 
         <h3>Step 1: Choose original language</h3>
 
-        <turbo-frame id="select_orig_lang_frame">
-            {% include "_select_orig_lang.html" %}
-        </turbo-frame>
+        {{ page.incl_select_orig_lang() | safe }}
 
         <br><br>
 
         <h3>Step 2: Write text script</h3>
         {% include "ssml_reference.html" %}
-        <turbo-frame id="text_error_frame">
-            {% include "_text_error.html" %}
-        </turbo-frame>
-        <turbo-frame id="textarea_frame">
-            {% include "_textarea.html" %}
-        </turbo-frame>
-
+        {{ page.incl_text_error() | safe }}
+        {{ page.incl_textarea() | safe }}
         <input class="p-2 btn-primary" type="submit" accesskey="p" value="Play current line (Alt-P)" name="play_current_line" id="play_current_line" >
         <br><br>
         <h3>Step 3: Add translations</h3>
         <div class="inline-inside-block">
             <div class=inlined-item">
-                <turbo-frame id="add_translation_frame">
-                    {% include "_add_translation.html" %}
-                </turbo-frame>
+                {{ page.incl_add_translation() | safe }}
             </div>
-            <div class=inlined-item">{% include "_translation_progress_info.html" %}</div>
+{#            <div class=inlined-item">{% include "_translation_progress_info.html" %}</div>#}
         </div>
 
         <h3>Step 4: Select voices</h3>
-        <turbo-frame id="select_voices">
-            {% include "_select_voices.html" %}
-        </turbo-frame>
+        {{ page.incl_select_voices() | safe }}
 
         <h3>Step 5: Make voiceover and subtitles</h3>
         <div class="inline-inside-block">
             <div class="inlined-item">
-                <turbo-frame id="makeit_frame">
-                    {% include "_makeit.html" %}
-                </turbo-frame>
+                {{ page.incl_makeit() | safe }}
             </div>
-            <div class="inlined-item">{% include "_synth_progress_info.html" %}</div>
+{#            <div class="inlined-item">{% include "_synth_progress_info.html" %}</div>#}
         </div>
     </form>
     </div>

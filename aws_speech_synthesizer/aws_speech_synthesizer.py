@@ -6,7 +6,7 @@ from mylogger import mylog
 from utils import write_as_mp3
 from utils.misc_utils import speech_marks_to_srt, text_to_ssml
 from utils.replace_xml_reserved_chars import unescape_xml_chars
-
+from utils import mp3_to_pcm
 
 def is_sentence(line: str):
     return line.startswith("<s>") and line.endswith("</s>")
@@ -40,18 +40,18 @@ class AwsSpeechSynthesizer:
     #     mylog.info('Received response for synthesizing mp3')
     #     return response['AudioStream'].read()
 
-    def _get_speech_chunk(self, ssml: str, output_format: str, sample_rate_hz: int):
+    def _get_speech_chunk_pcm(self, ssml: str):
         response = self.client.synthesize_speech(Engine=self.engine,
                                                  VoiceId=self.voice_id,
-                                                 OutputFormat=output_format,
-                                                 SampleRate=str(sample_rate_hz),
+                                                 OutputFormat="mp3",
+                                                 SampleRate="24000",
                                                  TextType='ssml',
                                                  LanguageCode=self.language_code,
                                                  Text=f'<speak>{ssml}</speak>',
                                                  )
-        return response['AudioStream'].read()
+        return mp3_to_pcm(response['AudioStream'].read())
 
-    def synth_speech_pcm_stream(self, ssml, max_sentences_per_batch: int = 10, sample_rate_hz: int = 16000):
+    def synth_speech_pcm_stream(self, ssml, max_sentences_per_batch: int = 10, sample_rate_hz: int = 24000):
         mylog.info(f'Sending request to aws polly for synthesizing speech pcm: {len(ssml)} symbols')
 
         lines = ssml.split("\n")
@@ -67,8 +67,7 @@ class AwsSpeechSynthesizer:
                 if len(batch_lines) == 1:
                     batch_lines.append("")
                 speech_marks = self._get_batch_speech_marks("\n".join(batch_lines))
-                speech_chunk = self._get_speech_chunk("\n".join(batch_lines[:-1]), output_format="pcm",
-                                                      sample_rate_hz=sample_rate_hz)
+                speech_chunk = self._get_speech_chunk_pcm("\n".join(batch_lines[:-1]))
                 target_chunk_duration_ms = int(speech_marks[-1]["time"])
                 actual_duration_ms = int(len(bytes(speech_chunk))*500/sample_rate_hz)
                 addition = (target_chunk_duration_ms - actual_duration_ms)*sample_rate_hz

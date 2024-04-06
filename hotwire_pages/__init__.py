@@ -1,0 +1,1 @@
+from .hotwire_page import HotwirePage

@@ -10,7 +10,7 @@
         return textarea.selectionStart;
     }
     function updateCursorPos(updateElementId, textAreaId){
-        var pos = getCursorPos(textAreaId);
+        {#var pos = getCursorPos(textAreaId);#}
         var updateField = document.getElementById(updateElementId);
         updateField.value = getCursorPos(textAreaId)
     }
