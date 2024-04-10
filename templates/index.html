@@ -47,17 +47,19 @@
             <div class=inlined-item">
                 {{ page.incl_add_translation() | safe }}
             </div>
-{#            <div class=inlined-item">{% include "_translation_progress_info.html" %}</div>#}
+         <div class="inlined-item">{{ page.incl_translate_progress_indicator() | safe }}</div>
         </div>
 
         <h3>Step 4: Select voices</h3>
         {{ page.incl_select_voices() | safe }}
 
         <h3>Step 5: Make voiceover and subtitles</h3>
+        {{ page.incl_refresh_makeit_status() | safe }}
         <div class="inline-inside-block">
             <div class="inlined-item">
                 {{ page.incl_makeit() | safe }}
             </div>
+            <div class="inlined-item">{{ page.incl_makeit_progress_indicator() | safe }}</div>
 {#            <div class="inlined-item">{% include "_synth_progress_info.html" %}</div>#}
         </div>
     </form>

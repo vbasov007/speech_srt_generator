@@ -1,5 +1,5 @@
-import os
 import hashlib
+import os
 
 from multilang import split_translations, present_translations
 
@@ -11,12 +11,14 @@ def make_one_line_mp3(line_of_text, voices, orig_lang, converter, temp_folder):
                                       present_translations(line_of_text),
                                       ignore_codes=True)
 
+    if len(translations.values()) < 1:
+        res['error'] = "Put cursor to the line that you want to play!"
+        return res
+
     text_to_play = f'<s>{list(translations.values())[0]}</s>'
-    if len(translations.values()) < 1 or len(text_to_play.strip()) < 1:
-        res['error'] = "No pronounceable content in the selected line."
-        return
 
     lang = list(translations.keys())[0]
+
     voice = voices[lang]
 
     # unique file name for string plus voice id

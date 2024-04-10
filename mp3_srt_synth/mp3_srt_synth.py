@@ -4,8 +4,10 @@ from typing import List, Dict, Callable, Optional
 from aws_speech_synthesizer import AwsSpeechSynthesizer
 from utils.text2lines import text2lines, lines2ssml, ScriptLine
 
+
 class Mp3SrtSynthException(Exception):
     pass
+
 
 class Mp3SrtSynth:
     long_lang_code = {
@@ -36,10 +38,10 @@ class Mp3SrtSynth:
 
     voices = {
         "EN": ["Matthew", "Joey", "Joanna", "Kendra"],
-        "DE": ["Daniel","Vicki"],
+        "DE": ["Daniel", "Vicki"],
         "FR": ["Lea", "Remi"],
         "IT": ["Bianca", "Adriano"],
-        "ZH": ["Zhiyu",],
+        "ZH": ["Zhiyu", ],
         "JA": ["Kazuha", "Takumi", "Tomoko"],
         "RU": ["Maxim", "Tatyana"],
     }
@@ -117,23 +119,23 @@ class Mp3SrtSynth:
         ssml = lines2ssml(lines)
         with open(mp3_file_path, 'wb') as mp3_out, open(srt_file_path, 'w', encoding='utf-8') as srt_out:
             srt_out.write(codecs.BOM_UTF8.decode('utf-8'))
-            self._synthesizers[short_lang_code].synth_speech_and_subtitles_to_files(text=ssml, mp3_out=mp3_out, srt_out=srt_out, ssml_input=True)
+            self._synthesizers[short_lang_code].synth_speech_and_subtitles_to_files(text=ssml, mp3_out=mp3_out,
+                                                                                    srt_out=srt_out, ssml_input=True)
 
     def synth_one_phrase_mp3_to_file(self, text, mp3_file_path, short_lang_code):
         # ssml = f'<speak>{text}</speak>'
         with open(mp3_file_path, 'wb') as mp3_out:
-            self._synthesizers[short_lang_code].synth_speech_and_subtitles_to_files(text=text, mp3_out=mp3_out, ssml_input=True)
+            self._synthesizers[short_lang_code].synth_speech_and_subtitles_to_files(text=text, mp3_out=mp3_out,
+                                                                                    ssml_input=True)
 
     def synthesize_all_langs(self, translations: Dict[str, str],
                              mp3_file_paths: Dict[str, str], srt_file_paths: Dict[str, str],
                              report_progress: Optional[Callable] = None):
-        def rp(val):
-            if report_progress:
-                report_progress(val)
 
         adjusted = self._calc_adjustments(translations)
 
-        rp(0.1)
+        if report_progress:
+            report_progress(1.0, "Making voice")
 
         num_of_lang = len(adjusted)
         count = 0
@@ -141,4 +143,7 @@ class Mp3SrtSynth:
             self.synth_mp3_srt_to_files(lines, mp3_file_paths[short_lang_code],
                                         srt_file_paths[short_lang_code], short_lang_code)
             count += 1
-            rp(count/num_of_lang)
+
+            if report_progress:
+                report_progress(100 * count / num_of_lang, f"Making {short_lang_code}")
+

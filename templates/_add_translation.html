@@ -6,6 +6,6 @@
             <option value="{{lang_code}}" {% if lang_code in present_langs %}hidden{% endif %}>{{name}}</option>
         {% endfor %}
     </select>
-    <input class="p-2 btn-primary" type="submit" value="ADD LANGUAGE" name="add_lang">
+    <input class="p-2 btn-primary" type="submit" value="ADD LANGUAGE" name="add_lang" {% if disabled %}disabled{% endif %}>
     <div class="p-2 error">{% if translation_message %}&nbsp;{{ translation_message }}{% endif %}</div>
 </div>

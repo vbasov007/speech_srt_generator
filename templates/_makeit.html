@@ -1,5 +1,6 @@
 <div class="inline-inside-block">
-    <div class="inlined-item"><input class="btn-primary" type="submit" name="makeit" value="MAKE VOICEOVER AND SUBTITLES"></div>
+    <div class="inlined-item">
+        <input class="btn-primary" type="submit" name="makeit" value="MAKE VOICEOVER AND SUBTITLES" {% if disable_makeit_button  %}disabled{% endif %}></div>
     <div class="inlined-item">
         {% if making_error %}
             <span class="error">&nbsp;{{ making_error }}</span>

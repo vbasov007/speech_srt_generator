@@ -17,7 +17,8 @@ class HotFunc:
 
 class HotwirePage:
 
-    def __init__(self, turbo):
+    def __init__(self, turbo, request_obj):
+        self._request = request_obj
         self._turbo = turbo
         self.main_template = ""
         self.registry: Dict[str, HotFunc] = {}
@@ -25,6 +26,9 @@ class HotwirePage:
         self._class_name = self.__class__.__name__.lower()
 
         self.register(self.embedded_context_frame, update_always=True)
+
+    def get_request_form_value(self, element_id):
+        return self._request.form.get(element_id)
 
     def add_to_stored_context(self, variable_name):
         if not hasattr(self, variable_name):
@@ -50,10 +54,10 @@ class HotwirePage:
         return f"{hotfunc.name}-{self._class_name}"
 
     def wrap_turbo_frame(self, hf: HotFunc, template_name=None, string_template=None, **template_args):
-        if template_name:
+        if template_name is not None:
             res = render_template(template_name, **template_args)
         else:
-            if string_template:
+            if string_template is not None:
                 res = render_template_string(string_template, **template_args)
             else:
                 res = f'{template_args}'
@@ -94,8 +98,26 @@ class HotwirePage:
         return self.get_html(self.cur_func_name(), string_template=self.context_frame_template(),
                              context_string=json.dumps(res))
 
-    def restore_context(self, request):
-        updated_data = json.loads(request.form.get("context_frame"))
+    def restore_context(self):
+        updated_data = json.loads(self._request.form.get("context_frame"))
         for key, value in updated_data.items():
             if key in self._context_var_names:
                 setattr(self, key, value)
+
+
+    @staticmethod
+    def initiate_timed_updates_template(html_element_name: str, interval_ms: int) -> str:
+        template = f"""
+        <script>
+        if (typeof hwIntervalObject_{html_element_name} !== 'undefined') {{
+            clearInterval(hwIntervalObject_{html_element_name})
+        }}
+        var hwIntervalObject_{html_element_name} = setInterval(function() {{
+                const hwRefreshButton_{html_element_name} = document.querySelector('input[name="{html_element_name}"]');
+                if(hwRefreshButton_{html_element_name} ) hwRefreshButton_{html_element_name}.click();
+        }}, {interval_ms});
+        </script>
+        <input type="submit" name="{html_element_name}" value="_" hidden>
+        """
+        return template
+

@@ -3,10 +3,11 @@ import json
 import boto3
 
 from mylogger import mylog
+from utils import mp3_to_pcm
 from utils import write_as_mp3
 from utils.misc_utils import speech_marks_to_srt, text_to_ssml
 from utils.replace_xml_reserved_chars import unescape_xml_chars
-from utils import mp3_to_pcm
+
 
 def is_sentence(line: str):
     return line.startswith("<s>") and line.endswith("</s>")
@@ -27,19 +28,6 @@ class AwsSpeechSynthesizer:
                                 region_name=self.region_name)
         self.client = session.client('polly')
 
-    # def synth_mp3_stream_old(self, ssml):
-    #     mylog.info(f'Sending request to aws polly for synthesizing mp3: {len(ssml)} symbols')
-    #     response = self.client.synthesize_speech(Engine=self.engine,
-    #                                              VoiceId=self.voice_id,
-    #                                              OutputFormat='mp3',
-    #                                              SampleRate='24000',
-    #                                              TextType='ssml',
-    #                                              LanguageCode=self.language_code,
-    #                                              Text=f'<speak>{ssml}</speak>',
-    #                                              )
-    #     mylog.info('Received response for synthesizing mp3')
-    #     return response['AudioStream'].read()
-
     def _get_speech_chunk_pcm(self, ssml: str):
         response = self.client.synthesize_speech(Engine=self.engine,
                                                  VoiceId=self.voice_id,
@@ -54,7 +42,6 @@ class AwsSpeechSynthesizer:
     def synth_speech_pcm_stream(self, ssml, max_sentences_per_batch: int = 10, sample_rate_hz: int = 24000):
         mylog.info(f'Sending request to aws polly for synthesizing speech pcm: {len(ssml)} symbols')
 
-        lines = ssml.split("\n")
         streams = []
         batch_lines = []
         lines = ssml.split("\n")
@@ -69,30 +56,15 @@ class AwsSpeechSynthesizer:
                 speech_marks = self._get_batch_speech_marks("\n".join(batch_lines))
                 speech_chunk = self._get_speech_chunk_pcm("\n".join(batch_lines[:-1]))
                 target_chunk_duration_ms = int(speech_marks[-1]["time"])
-                actual_duration_ms = int(len(bytes(speech_chunk))*500/sample_rate_hz)
-                addition = (target_chunk_duration_ms - actual_duration_ms)*sample_rate_hz
+                actual_duration_ms = int(len(bytes(speech_chunk)) * 500 / sample_rate_hz)
+                addition = (target_chunk_duration_ms - actual_duration_ms) * sample_rate_hz
                 if addition > 0:
-                    speech_chunk += b'\x00\x00' * int(addition/1000)
+                    speech_chunk += b'\x00\x00' * int(addition / 1000)
                 streams.append(speech_chunk)
                 batch_lines = [batch_lines[-1], ]
                 sentence_count = 1
 
         return b''.join(streams)
-
-    # def synth_speech_marks_old(self, ssml):
-    #     mylog.info(f'Sending request to aws polly for synthesizing json: {len(ssml)} symbols')
-    #     response = self.client.synthesize_speech(Engine=self.engine,
-    #                                              VoiceId=self.voice_id,
-    #                                              OutputFormat='json',
-    #                                              SpeechMarkTypes=['sentence', 'ssml'],
-    #                                              TextType='ssml',
-    #                                              LanguageCode=self.language_code,
-    #                                              Text=f'<speak>{ssml}</speak>'
-    #                                              )
-    #     mylog.info('Received response for synthesizing json')
-    #     sm_json = response['AudioStream'].read().decode('utf-8').split('\n')
-    #     speech_marks_list = [json.loads(r) for r in sm_json if r != '']
-    #     return speech_marks_list
 
     def _get_batch_speech_marks(self, ssml):
         response = self.client.synthesize_speech(Engine=self.engine,

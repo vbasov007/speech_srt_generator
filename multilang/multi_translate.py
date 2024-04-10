@@ -5,12 +5,17 @@ from utils import string_to_ms
 
 
 def add_translation(text, target_lang, source_lang, url, key, startswith_symb="#", block_visual_splitter="---",
-                    verify_cert=True,) -> str:
+                    verify_cert=True,
+                     report_progress = None) -> str:
     lines = text.split('\n')
     # url, key = translator_url_key()
     tr = Translation(url, key, verify=verify_cert)
     res = []
-    for line in lines:
+    for count, line in enumerate(lines):
+
+        if report_progress:
+            report_progress(100*count/len(lines), "Please, wait... translating")
+
         # leave visual splitter between blocks
         if line.strip() == block_visual_splitter:
             # res.append(line)
