@@ -1,9 +1,9 @@
 import inspect
+import json
 from dataclasses import dataclass
 from typing import Callable, Any, Dict, Union
 
 from flask import render_template, render_template_string
-import json
 
 
 @dataclass
@@ -17,12 +17,14 @@ class HotFunc:
 
 class HotwirePage:
 
-    def __init__(self, turbo, request_obj):
+    def __init__(self, turbo, request_obj, session_obj=None):
         self._request = request_obj
         self._turbo = turbo
+        self._session = session_obj
         self.main_template = ""
         self.registry: Dict[str, HotFunc] = {}
         self._context_var_names: set = set()
+        self._session_var_names: set = set()
         self._class_name = self.__class__.__name__.lower()
 
         self.register(self.embedded_context_frame, update_always=True)
@@ -30,12 +32,22 @@ class HotwirePage:
     def get_request_form_value(self, element_id):
         return self._request.form.get(element_id)
 
-    def add_to_stored_context(self, variable_name):
-        if not hasattr(self, variable_name):
-            raise ValueError(f"{variable_name} is not defined before attempt to store as the context")
+    def add_to_stored_context(self, variable_name_or_list: Union[str, list]):
+        self._context_var_names.update(self._add_context(variable_name_or_list))
 
-        self._context_var_names.add(variable_name)
+    def add_to_session_context(self, variable_name_or_list: Union[str, list]):
+        self._session_var_names.update(self._add_context(variable_name_or_list))
 
+    def _add_context(self, variable_name_or_list: Union[str, list]) -> set:
+        res = set()
+        if not isinstance(variable_name_or_list, list):
+            variable_name_or_list = [variable_name_or_list, ]
+        for variable_name in variable_name_or_list:
+            if not hasattr(self, variable_name):
+                raise ValueError(f"{variable_name} is not defined before attempt to store")
+            res.add(variable_name)
+
+        return res
 
     def register(self, func, update_always=False, for_full_render_only=False):
         self.registry.update({func.__name__: HotFunc(func.__name__, func,
@@ -69,9 +81,11 @@ class HotwirePage:
             hf.freeze = hf.func()
 
     def full_render(self):
+        self._save_session_context()
         return render_template(self.main_template, page=self)
 
     def update(self):
+        self._save_session_context()
         stream = []
         for hf in self.registry.values():
             if not hf.for_full_render_only:
@@ -99,11 +113,27 @@ class HotwirePage:
                              context_string=json.dumps(res))
 
     def restore_context(self):
+        self._restore_embedded_context()
+        self._restore_session_context()
+
+    def _restore_embedded_context(self):
         updated_data = json.loads(self._request.form.get("context_frame"))
         for key, value in updated_data.items():
             if key in self._context_var_names:
                 setattr(self, key, value)
 
+    def _restore_session_context(self):
+        if self._session is None:
+            return
+        for key, value in self._session.items():
+            if key in self._session_var_names:
+                setattr(self, key, value)
+
+    def _save_session_context(self):
+        if self._session is None:
+            return
+        for var_name in self._session_var_names:
+            self._session[var_name] = getattr(self, var_name)
 
     @staticmethod
     def initiate_timed_updates_template(html_element_name: str, interval_ms: int) -> str:
@@ -120,4 +150,3 @@ class HotwirePage:
         <input type="submit" name="{html_element_name}" value="_" hidden>
         """
         return template
-

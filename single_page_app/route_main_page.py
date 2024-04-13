@@ -7,14 +7,14 @@ from .app_page_controller import AppPageController
 
 @app.route('/', methods=['GET', 'POST'])
 def main_page():
-    page = AppPageController(turbo, request)
+    page = AppPageController(turbo, request, worker)
 
     if request.method == "GET":
         return page.full_render()
 
     page.restore_context()
-
     page.text = page.get_textarea()
+    page.freeze()
 
     voices = page.get_voices()
 

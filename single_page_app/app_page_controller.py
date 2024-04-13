@@ -3,7 +3,6 @@ import os
 from typing import List
 
 import utils
-from app import worker
 from hotwire_pages import HotwirePage
 from mp3_srt_synth import Mp3SrtSynth
 from multilang import present_translations
@@ -16,8 +15,9 @@ from .maker import make_mp3_srt_files
 
 class AppPageController(HotwirePage):
 
-    def __init__(self, turbo_obj, request_obj):
+    def __init__(self, turbo_obj, request_obj, worker_obj):
         super().__init__(turbo_obj, request_obj)
+        self._worker = worker_obj
         self.main_template = "index.html"
 
         self.text: str = ""
@@ -29,20 +29,18 @@ class AppPageController(HotwirePage):
         self.file_name_mp3: str = ""
         self.orig_lang: str = ""
 
-        self.reset()
-
         self.supported_langs = Mp3SrtSynth.lang_code_to_name
 
-        self.add_to_stored_context("orig_lang")
+        # self.add_to_stored_context("orig_lang")
 
         self.enable_orig_lang_change: bool = True
-        self.add_to_stored_context("enable_orig_lang_change")
+        # self.add_to_stored_context("enable_orig_lang_change")
 
         self.cur_makeit_worker: str = ""
-        self.add_to_stored_context("cur_makeit_worker")
+        # self.add_to_stored_context("cur_makeit_worker")
 
         self.cur_translate_worker: str = ""
-        self.add_to_stored_context("cur_translate_worker")
+        # self.add_to_stored_context("cur_translate_worker")
 
         self.cur_makeit_progress: float = 0
         self.cur_translate_progress: float = 0
@@ -56,6 +54,17 @@ class AppPageController(HotwirePage):
         self._temp_static_folder = TMP_PLAY_FOLDER
         if not os.path.exists(self._temp_static_folder):
             os.makedirs(self._temp_static_folder)
+
+        self.add_to_stored_context(["text",
+                                    "text_error",
+                                    "making_error",
+                                    "download_file_name",
+                                    "download_as_name",
+                                    "orig_lang",
+                                    "enable_orig_lang_change",
+                                    "cur_makeit_worker",
+                                    "cur_translate_worker"
+                                    ])
 
         self.register(self.incl_line_player)
         self.register(self.incl_textarea)
@@ -78,33 +87,35 @@ class AppPageController(HotwirePage):
         self.message: str = ""
         self.file_name_mp3 = ""
         self.enable_orig_lang_change = True
+        self.cur_makeit_worker: str = ""
+        self.cur_makeit_progress: float = 0
 
     def add_lang(self, new_lang):
         if (new_lang in self.present_langs()) or (new_lang == self.orig_lang):
             self.message = f'Language {new_lang} already present or is the original language'
             return
 
-        self.cur_translate_worker = worker.run(make_translation, self.text, new_lang, self.orig_lang)
+        self.cur_translate_worker = self._worker.run(make_translation, self.text, new_lang, self.orig_lang)
         # res = make_translation(self.text, new_lang, self.orig_lang)
 
         return
 
     def add_lang_result(self):
-        status = worker.get_status(self.cur_translate_worker)
+        status = self._worker.get_status(self.cur_translate_worker)
         if status == 'completed':
-            result = worker.get_result(self.cur_translate_worker)
+            result = self._worker.get_result(self.cur_translate_worker)
             if 'error' in result:
                 self.text_error = result['error']
                 return
 
             self.text = utils.unescape_xml_chars(result['text'])
             self.enable_orig_lang_change = False
-            worker.clear(self.cur_translate_worker)
+            self._worker.clear(self.cur_translate_worker)
             self.cur_translate_worker = ""
             self.cur_makeit_progress = 0
             return
 
-        self.cur_translate_progress = worker.get_progress(self.cur_translate_worker)
+        self.cur_translate_progress = self._worker.get_progress(self.cur_translate_worker)
 
     def play_current_line(self, line_of_text, voices):
 
@@ -119,19 +130,19 @@ class AppPageController(HotwirePage):
         return
 
     def makeit_start(self, text, voices):
-        self.cur_makeit_worker = worker.run(make_mp3_srt_files,
-                                            text,
-                                            voices,
-                                            self.orig_lang,
-                                            self.present_langs(),
-                                            get_converter(),
-                                            self._folder
-                                            )
+        self.cur_makeit_worker = self._worker.run(make_mp3_srt_files,
+                                                  text,
+                                                  voices,
+                                                  self.orig_lang,
+                                                  self.present_langs(),
+                                                  get_converter(),
+                                                  self._folder
+                                                  )
 
     def makeit_result(self):
-        status = worker.get_status(self.cur_makeit_worker)
+        status = self._worker.get_status(self.cur_makeit_worker)
         if status == 'completed':
-            result = worker.get_result(self.cur_makeit_worker)
+            result = self._worker.get_result(self.cur_makeit_worker)
 
             if 'error' in result:
                 self.making_error = result['error']
@@ -142,13 +153,13 @@ class AppPageController(HotwirePage):
                 formatted_datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 self.download_as_name = f'mp3_srt_{formatted_datetime}.zip'
 
-            worker.clear(self.cur_makeit_worker)
+            self._worker.clear(self.cur_makeit_worker)
             self.cur_makeit_worker = ""
             self.cur_makeit_progress = 0
 
             return
 
-        self.cur_makeit_progress = worker.get_progress(self.cur_makeit_worker)
+        self.cur_makeit_progress = self._worker.get_progress(self.cur_makeit_worker)
 
     def present_langs(self) -> List[str]:
         return list(set([self.orig_lang, ] + present_translations(self.text)))
@@ -193,12 +204,13 @@ class AppPageController(HotwirePage):
         if self.cur_makeit_worker:
             template = """
                         <div>
-                            <label>{{ stage }} {{ cur_progress }}%</label><progress value='{{ cur_progress }}' max='100'></progress>
-                            <input type="submit" name="terminate" value="Cancel">
+                        <label>{{ stage }} {{ cur_progress }}%</label><progress value='{{ cur_progress }}' max='100'>
+                        </progress>
+                        <input type="submit" name="terminate" value="Cancel">
                         </div>
                         """
 
-            stage = worker.get_stage(self.cur_makeit_worker)
+            stage = self._worker.get_stage(self.cur_makeit_worker)
             return self.get_html(self.cur_func_name(),
                                  string_template=template,
                                  cur_progress=round(self.cur_makeit_progress),
@@ -210,11 +222,12 @@ class AppPageController(HotwirePage):
         if self.cur_translate_worker:
             template = """
                         <div>
-                            <label>{{ stage }} {{ cur_progress }}%</label><progress value='{{ cur_progress }}' max='100'></progress>
-                            <input type="submit" name="terminate_translate" value="Cancel">
+                        <label>{{ stage }} {{ cur_progress }}%</label><progress value='{{ cur_progress }}' max='100'>
+                        </progress>
+                        <input type="submit" name="terminate_translate" value="Cancel">
                         </div>
                         """
-            stage = worker.get_stage(self.cur_translate_worker)
+            stage = self._worker.get_stage(self.cur_translate_worker)
             return self.get_html(self.cur_func_name(),
                                  string_template=template,
                                  cur_progress=round(self.cur_translate_progress),
@@ -245,7 +258,7 @@ class AppPageController(HotwirePage):
         return self.get_request_form_value("selected_orig_lang")
 
     def get_voices(self):
-        return {l: self.get_request_form_value(f"voice_{l}") for l in self.present_langs()}
+        return {lang: self.get_request_form_value(f"voice_{lang}") for lang in self.present_langs()}
 
     def is_action_add_lang(self):
         return self.get_request_form_value("add_lang")
