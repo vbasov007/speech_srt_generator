@@ -90,6 +90,11 @@ class AppPageController(HotwirePage):
         self.cur_makeit_worker: str = ""
         self.cur_makeit_progress: float = 0
 
+    def clear_download_link(self):
+        self.download_as_name = ""
+        self.download_file_name = ""
+
+
     def add_lang(self, new_lang):
         if (new_lang in self.present_langs()) or (new_lang == self.orig_lang):
             self.message = f'Language {new_lang} already present or is the original language'

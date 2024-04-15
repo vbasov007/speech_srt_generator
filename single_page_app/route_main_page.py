@@ -22,9 +22,11 @@ def main_page():
         page.reset()
 
     elif page.is_action_change_orig_lang():
+        page.clear_download_link()
         page.orig_lang = page.get_selected_orig_lang()
 
     elif page.is_action_add_lang():
+        page.clear_download_link()
         page.add_lang(page.get_added_lang())
 
     elif page.is_action_play_current_line():
@@ -36,9 +38,10 @@ def main_page():
         page.play_current_line(line_of_text, voices)
 
     elif page.is_action_makeit():
+        page.clear_download_link()
         text = utils.escape_xml_reserved_chars(page.text)
-        # page.makeit(text, voices)
         page.makeit_start(text, voices)
+
 
     elif page.is_action_refresh_makeit_progress():
         if page.cur_makeit_worker:
