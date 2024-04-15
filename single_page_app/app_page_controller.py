@@ -27,7 +27,7 @@ class AppPageController(HotwirePage):
         self.download_as_name: str = ""
         self.message: str = ""
         self.file_name_mp3: str = ""
-        self.orig_lang: str = ""
+        self.orig_lang: str = "EN"
 
         self.supported_langs = Mp3SrtSynth.lang_code_to_name
 
