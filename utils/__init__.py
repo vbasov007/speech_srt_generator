@@ -6,3 +6,4 @@ from .temp_files_cleaning import remove_files_after_completion
 from .replace_xml_reserved_chars import escape_xml_reserved_chars, unescape_xml_chars
 from .mp3_encoder import write_as_mp3, mp3_to_pcm
 from .delete_old_files import delete_old_files
+from .extend_with import extend_with

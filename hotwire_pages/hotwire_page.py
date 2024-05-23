@@ -26,8 +26,12 @@ class HotwirePage:
         self._context_var_names: set = set()
         self._session_var_names: set = set()
         self._class_name = self.__class__.__name__.lower()
+        self.event_handlers = []
 
         self.register(self.embedded_context_frame, update_always=True)
+
+        self._register_all_decorated_hotwire_funcs()
+        self._register_event_handlers()
 
     def get_request_form_value(self, element_id):
         return self._request.form.get(element_id)
@@ -49,11 +53,41 @@ class HotwirePage:
 
         return res
 
-    def register(self, func, update_always=False, for_full_render_only=False):
-        self.registry.update({func.__name__: HotFunc(func.__name__, func,
-                                                     update_always=update_always,
-                                                     for_full_render_only=for_full_render_only)})
+    def register(self, func: Union[Callable, str], update_always=False, for_full_render_only=False):
+        if isinstance(func, str):
+            func_name = func
+        else:
+            func_name = func.__name__
+        func_obj = getattr(self, func_name)
+        self.registry.update({func_name: HotFunc(func_name, func_obj,
+                                                 update_always=update_always,
+                                                 for_full_render_only=for_full_render_only)})
         return func
+
+    def _register_all_decorated_hotwire_funcs(self):
+        for method_name in dir(self):
+            method = getattr(self, method_name)
+            if hasattr(method, "this_is_hotwire_func"):
+                # if isinstance(method, HotwireFunc):
+                self.register(method.func_name, method.update_always, method.for_full_render_only)
+
+    def _register_event_handlers(self):
+        for method_name in dir(self):
+            method = getattr(self, method_name)
+            if hasattr(method, "this_is_event_handler"):
+                self.event_handlers.append(method)
+
+    def _execute_event_handler(self, handler):
+        if handler.check_trigger_func:
+            if handler.check_trigger_func(handler.trigger_id):
+                handler()
+        else:
+            if self.get_request_form_value(handler.trigger_id):
+                handler()
+
+    def event_loop(self):
+        for handler in self.event_handlers:
+            self._execute_event_handler(handler)
 
     def get_registry(self, func):
         return self.registry.get(func.__name__)

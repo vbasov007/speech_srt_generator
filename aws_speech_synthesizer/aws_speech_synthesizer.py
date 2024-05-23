@@ -79,7 +79,7 @@ class AwsSpeechSynthesizer:
         sm_json = response['AudioStream'].read().decode('utf-8').split('\n')
         return [json.loads(r) for r in sm_json if r != '']
 
-    def synth_speech_marks(self, ssml, max_sentences_per_batch=10):
+    def _synth_speech_marks(self, ssml, max_sentences_per_batch=10):
 
         mylog.info(f'Sending request to aws polly for synthesizing json: {len(ssml)} symbols')
 
@@ -124,19 +124,19 @@ class AwsSpeechSynthesizer:
             # mp3_out.write(response)
 
         if srt_out is not None:
-            srt = speech_marks_to_srt(self.synth_speech_marks(ssml), srt_out)
+            srt = speech_marks_to_srt(self._synth_speech_marks(ssml), srt_out)
             srt = unescape_xml_chars(srt)
             srt_out.write(srt)
 
     def duration(self, frase):
-        speech_marks = self.synth_speech_marks(f'<speak> {frase} <mark name="end"/></speak>')
+        speech_marks = self._synth_speech_marks(f'<speak> {frase} <mark name="end"/></speak>')
         for sm in speech_marks:
             if sm['type'] == 'ssml' and sm['value'] == 'end':
                 return int(sm['time'])
         return None
 
     def start_sentence_timings(self, ssml):
-        speech_marks = self.synth_speech_marks(ssml)
+        speech_marks = self._synth_speech_marks(ssml)
         res = []
         for sm in speech_marks:
             if sm['type'] == 'sentence':
