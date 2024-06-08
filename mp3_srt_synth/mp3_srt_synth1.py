@@ -1,15 +1,12 @@
 import codecs
 from typing import List, Dict, Callable, Optional
 
-from aws_speech_synthesizer import AwsSpeechSynthesizer
+from aws_speech_synthesizer import AwsSpeechSynthesizer1
+from speech_synth_interface import SpeechSynthInterface
 from utils.text2lines import text2lines, lines2ssml, ScriptLine
 
 
-class Mp3SrtSynthException(Exception):
-    pass
-
-
-class Mp3SrtSynth:
+class Mp3SrtSynth1:
     long_lang_code = {
         'EN': 'en-US',
         'DE': 'de-DE',
@@ -53,27 +50,25 @@ class Mp3SrtSynth:
                      "Zhiyu",
                      "Kazuha", "Takumi", "Tomoko"]
 
-    def __init__(self, access_key_id, secret_access_key, region):
-        self._access_key_id = access_key_id
-        self._secret_access_key = secret_access_key
-        self._region = region
-        self._synthesizers: Dict[str, AwsSpeechSynthesizer] = {}
+    def __init__(self):
+        self._synthesizers: Dict[str, SpeechSynthInterface] = {}
 
-    def add_lang(self, voice_id, short_lang_code, speech_style="conversational", engine=None):
-        if engine is None:
-            if voice_id in self.neural_voices:
-                engine = 'neural'
-            else:
-                engine = "standard"
+    def add_engine(self, voice_id: str, short_lang_code, provider: str, **kwargs):
+        assert provider in ["aws", ], f'Unknown provider "{provider}"'
 
-        self._synthesizers[short_lang_code] = AwsSpeechSynthesizer(access_key_id=self._access_key_id,
-                                                                   secret_access_key=self._secret_access_key,
-                                                                   region_name=self._region,
-                                                                   engine=engine,
-                                                                   voice_id=voice_id,
-                                                                   speech_style=speech_style,
-                                                                   language_code=self.long_lang_code[short_lang_code],
-                                                                   )
+        if provider == "aws":
+            self._synthesizers[short_lang_code] = AwsSpeechSynthesizer1(access_key_id=kwargs['access_key_id'],
+                                                                        secret_access_key=kwargs['secret_access_key'],
+                                                                        region_name=kwargs['region'],
+                                                                        engine=kwargs['engine'],
+                                                                        voice_id=voice_id,
+                                                                        speech_style=kwargs['speech_style'],
+                                                                        language_code=self.long_lang_code[
+                                                                            short_lang_code],
+                                                                        )
+
+        else:
+            return
 
     def _calc_adjustments(self, translations: Dict[str, str]) -> Dict[str, List[ScriptLine]]:
         lines: Dict[str, List[ScriptLine]] = {}
@@ -146,4 +141,3 @@ class Mp3SrtSynth:
 
             if report_progress:
                 report_progress(100 * count / num_of_lang, f"Making {short_lang_code}")
-

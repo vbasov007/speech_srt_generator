@@ -18,7 +18,7 @@ from .maker import make_mp3_srt_files
 @utils.extend_with(html_template_elements, event_handlers)
 class AppPageController(HotwirePage):
 
-    def __init__(self, turbo_obj, request_obj, worker_obj):
+    def __init__(self, turbo_obj, request_obj, worker_obj, user_id=None):
         super().__init__(turbo_obj, request_obj)
         self._worker = worker_obj
         self.main_template = "index.html"
@@ -31,6 +31,7 @@ class AppPageController(HotwirePage):
         self.message: str = ""
         self.file_name_mp3: str = ""
         self.orig_lang: str = "EN"
+        self.user_id = user_id
 
         self.supported_langs = Mp3SrtSynth.lang_code_to_name
 

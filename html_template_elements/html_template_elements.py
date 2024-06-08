@@ -102,3 +102,27 @@ def incl_refresh_makeit_status(self: 'AppPageController'):
                              string_template=self.initiate_timed_updates_template("refresh_makeit_status", 1000))
 
     return self.get_html(self.cur_func_name(), string_template="")
+
+
+@hotwire_html_template_element()
+def incl_navigation_bar(self: 'AppPageController'):
+    template = """
+        <div class="navbar">
+            <h1>Multilingual voice and subtitles over video</h1>
+            {% if user_id is none %}
+            <div class="navbar-buttons">
+                <a href="{{ url_for('login') }}" data-turbo="false">Log in</a>
+                <a href="{{ url_for('register') }}" data-turbo="false">Sign up</a>
+            </div>
+            {% else %}
+            <div>
+                <h4>Tokens: 10000</h4>
+            </div>
+            <div>
+                <h3>{{ user_id }}</h3>
+                <a href="{{ url_for('logout') }}" data-turbo="false">Sign out</a>
+            </div>
+            {% endif %}
+        </div>
+    """
+    return self.get_html(self.cur_func_name(), string_template=template, user_id=self.user_id)

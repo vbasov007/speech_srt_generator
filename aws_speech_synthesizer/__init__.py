@@ -1,1 +1,2 @@
 from .aws_speech_synthesizer import AwsSpeechSynthesizer
+from .aws_speech_synth1 import AwsSpeechSynthesizer1

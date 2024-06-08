@@ -11,12 +11,13 @@
 </head>
 
 <body>
+    {{ page.incl_navigation_bar() | safe }}
     <div class="container">
-    <div><h1>Multilingual Voiceover Assistant</h1></div>
-    <br>
-    <p>{% include "_intro.html" %}</p>
-
-    <br><br>
+{#    <div><h1>Multilingual Voiceover Assistant</h1></div>#}
+{#    <br>#}
+{#    <p>{% include "_intro.html" %}</p>#}
+{##}
+{#    <br><br>#}
 
     {{ page.incl_line_player() | safe }}
     <form action="/" method="post" onsubmit="updateCursorPos('cursor_position', 'textarea')">
