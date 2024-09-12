@@ -10,4 +10,4 @@
 from .route_main_page import *
 from .route_status import status
 from .route_download import download
-from .route_help import show_help
+from .route_help import show_help, show_training_video

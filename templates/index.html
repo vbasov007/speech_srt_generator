@@ -1,68 +1,244 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     {% include "_init_bootstrap.html" %}
     {% include "_styles.html" %}
     {% include "_get_cursor_position.html" %}
-
     <title>Voiceover Assistant</title>
-
     {{ turbo() }}
-</head>
+    <style>
+        h1 {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 56px;
+            font-weight: 600;
+            line-height: 64px;
+            letter-spacing: -0.01em;
+            text-align: left;
+        }
 
+        h3 {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 28px;
+            font-weight: 600;
+            line-height: 36px;
+            letter-spacing: -0.01em;
+            text-align: left;
+
+        }
+
+        .tips {
+            color: #1D1D1D;
+            font-feature-settings: 'liga' off, 'clig' off;
+
+            /* Body/body-04 */
+            font-family: "Source Sans 3", sans-serif;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 20px; /* 142.857% */
+        }
+
+        .intro {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 26px;
+            text-align: left;
+        }
+        .ifx_red_button {
+            display: inline-flex;
+            height: 40px;
+            padding: 0px 16px;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            border-radius: 1px;
+            border: 1px solid #CD002F;
+            background: #FFF;
+
+            color: #CD002F;
+            text-align: center;
+            font-feature-settings: 'liga' off, 'clig' off;
+            /* Body/body-semibold-03 */
+            font-family: "Source Sans 3", sans-serif;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: 24px; /* 150% */
+        }
+        .ifx_red_button:hover {
+            background: #CD002F;
+            color: #FFF;
+        }
+
+        .ifx_green_button {
+            display: inline-flex;
+            height: 48px;
+            padding: 0px 16px;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+
+            border-radius: 1px;
+            background: #0A8276;
+
+            color: #FFF;
+            text-align: center;
+            font-feature-settings: 'liga' off, 'clig' off;
+
+            /* Body/body-semibold-03 */
+            font-family: "Source Sans 3", sans-serif;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: 24px; /* 150% */
+        }
+        .ifx_green_button:hover {
+            background: #06534B;
+        }
+
+        .ifx_dropdown {
+            display: flex;
+            width: 224px;
+            padding: 8px 0px;
+            flex-direction: column;
+            align-items: flex-start;
+
+            border-radius: 1px;
+            border: 1px solid #EEEDED;
+            background: #FFF;
+/* Shadow small */
+            box-shadow: 0px 6px 9px 0px rgba(29, 29, 29, 0.10);
+        }
+
+        .form-group {
+            margin: 0 auto 1.5rem auto;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .ifx_text_area {
+            display: flex;
+            padding: 8px 16px;
+            align-items: flex-start;
+            gap: 8px;
+            flex: 1 0 0;
+            align-self: stretch;
+
+            border-radius: 1px;
+            border: 1px solid #575352;
+            background: #FFF;
+
+        }
+
+        .ifx_accordion_summary {
+            color: #0A8276;
+            font-feature-settings: 'liga' off, 'clig' off;
+            /* Heading/heading-06 */
+            font-family: "Source Sans 3", sans-serif;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: 26px; /* 144.444% */
+            letter-spacing: -0.18px;
+            cursor: pointer;
+        }
+
+        summary::before {
+        {#content: '\25BC  '; /* Downward chevron */#}
+            content: '';
+            {#background-image: url("{{ url_for('static', filename='chevron-down-16.svg') }}"); /* Downward chevron image */#}
+            background-size: 10px 10px;
+            background-repeat: no-repeat;
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            margin-right: 5px;
+            {#font-size: 15px;#}
+            {#margin-left: 10px;#}
+      }
+        #tips:not([open]) > summary::before {
+            background-image: url("{{ url_for('static', filename='chevron-down-16.svg') }}"); /* Downward chevron image */
+        }
+        #ssml_guide:not([open]) > summary::before {
+            background-image: url("{{ url_for('static', filename='chevron-down-16.svg') }}"); /* Downward chevron image */
+        }
+
+
+        #tips[open] > summary::before {
+            background-image: url("{{ url_for('static', filename='chevron-up-16.svg') }}"); /* Downward chevron image */
+        }
+        #ssml_guide[open] > summary::before {
+            background-image: url("{{ url_for('static', filename='chevron-up-16.svg') }}"); /* Downward chevron image */
+        }
+
+
+
+
+
+      details > p {
+        padding: 5px;
+          font-family: "Source Sans 3", sans-serif;
+        font-size: 14px;
+        font-weight: bold;
+        border: 15px;
+      }
+
+    </style>
+</head>
 <body>
     <div class="container">
-    <div><h1>Multilingual Voiceover Assistant</h1></div>
-    <br>
-    <p>{% include "_intro.html" %}</p>
-
-    <br><br>
-
-    {{ page.incl_line_player() | safe }}
-    <form action="/" method="post" onsubmit="updateCursorPos('cursor_position', 'textarea')">
-        <input type="hidden" id="cursor_position" name="cursor_position">
-        {{ page.embedded_context_frame() | safe }}
-
-
-        <input type="submit" class="btn-danger" name="reset" value="CLEAR THE FORM AND START OVER" style="background-color: red; color: white;">
-
-        {% if error %}
-            <p class="error">{{ error }}</p>
-        {% endif %}
-
-        <h3>Step 1: Choose original language</h3>
-
-        {{ page.incl_select_orig_lang() | safe }}
-
-        <br><br>
-
-        <h3>Step 2: Write text script</h3>
-        {% include "ssml_reference.html" %}
-        {{ page.incl_text_error() | safe }}
-        {{ page.incl_textarea() | safe }}
-        <input class="p-2 btn-primary" type="submit" accesskey="p" value="Play current line (Alt-P)" name="play_current_line" id="play_current_line" >
-        <br><br>
-        <h3>Step 3: Add translations</h3>
-        <div class="inline-inside-block">
-            <div class=inlined-item">
-                {{ page.incl_add_translation() | safe }}
-            </div>
-         <div class="inlined-item">{{ page.incl_translate_progress_indicator() | safe }}</div>
+        <div class="header">
+            <img src="{{ url_for('static', filename='ifx.png') }}" alt="Logo" style="height: 50px;">
+            <h1>Multilingual Voiceover Assistant</h1>
         </div>
+        <br>
+        <p>{% include "_intro.html" %}</p>
+        <br>
+        {{ page.incl_line_player() | safe }}
+        <form action="/" method="post" onsubmit="updateCursorPos('cursor_position', 'textarea')">
+            <input type="hidden" id="cursor_position" name="cursor_position">
+            {{ page.embedded_context_frame() | safe }}
+            <input type="submit" class="ifx_red_button" name="reset" value="CLICK HERE TO CLEAR THE FORM AND START OVER">
+            {% if error %}
+                <p class="error">{{ error }}</p>
+            {% endif %}
+            <br><br>
+            <h3>Step 1: Choose original language</h3>
+            {{ page.incl_select_orig_lang() | safe }}
+            <br><br>
+            <h3>Step 2: Write text script here</h3>
+{#            {% include "ssml_reference.html" %}#}
+        {% include "text_tips.html" %}
+            <div>
 
-        <h3>Step 4: Select voices</h3>
-        {{ page.incl_select_voices() | safe }}
-
-        <h3>Step 5: Make voiceover and subtitles</h3>
-        {{ page.incl_refresh_makeit_status() | safe }}
-        <div class="inline-inside-block">
-            <div class="inlined-item">
-                {{ page.incl_makeit() | safe }}
             </div>
-            <div class="inlined-item">{{ page.incl_makeit_progress_indicator() | safe }}</div>
-{#            <div class="inlined-item">{% include "_synth_progress_info.html" %}</div>#}
-        </div>
-    </form>
+            {{ page.incl_text_error() | safe }}
+            {{ page.incl_textarea() | safe }}
+            <input class="p-2 ifx_green_button" style="margin-top: 1rem" type="submit" accesskey="p" value="Play current line (Alt-P)" name="play_current_line" id="play_current_line">
+            <br><br>
+            <h3>Step 3: Add additional languages</h3>
+{#            <div class="inline-inside-block">#}
+{#                <div class="inlined-item">#}
+                    {{ page.incl_add_translation() | safe }}
+{#                </div>#}
+                {{ page.incl_translate_progress_indicator() | safe }}
+{#            </div>#}
+            <h3>Step 4: Select voices</h3>
+            {{ page.incl_select_voices() | safe }}
+            <h3>Step 5: Make voiceover and subtitles</h3>
+            {{ page.incl_refresh_makeit_status() | safe }}
+            <div class="inline-inside-block">
+                <div class="inlined-item">
+                    {{ page.incl_makeit() | safe }}
+                </div>
+                <div class="inlined-item">{{ page.incl_makeit_progress_indicator() | safe }}</div>
+            </div>
+        </form>
     </div>
 </body>
 </html>

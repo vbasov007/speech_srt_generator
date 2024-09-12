@@ -1,0 +1,30 @@
+<div class="tips">
+    <details id="tips">
+        <summary class="ifx_accordion_summary">Quick Help</summary>
+    <ol>
+        <li>Each line in the text is for one subtitle caption. It will show on the screen as one caption.
+            Both text-to-speech and automatic translation sees each line as a new sentence.
+            So, each line must be a complete phrase for translation.</li>
+        <li>By default, there will be pauses between sentences, matching natural speech. You can add an extra pause by inserting a line that looks like #N, where N is the pause length in milliseconds. For example, #2000
+means a pause of 2000 milliseconds or 2 seconds. This is useful if there is an action happening between sentences in the video, like a slide change. The "#" symbol must be the first character in the line, and
+the line should not have any other text except the pause time.</li>
+        <li>
+           You can set the exact time from the start of the sound file for each line. Use the format #HH:MM:SS,SSS to show when the phrase begins, with millisecond accuracy. For example, #00:01:35.5 means the phrase on
+the next line starts at 1 minute and 35.5 seconds after the beginning. Make sure all the sentences are in the correct order.
+        </li>
+        <li>You can use Speech Synthesis Markup Language (SSML) to make sure that abbreviations or words in foreign languages pronounced correctly.<br>
+            <details id="ssml_guide">
+                <summary class="ifx_accordion_summary">See SSML guide and examples</summary>
+                <p>Insert two seconds pause inside the phrase: <code>Hello there.&ltbreak time="2s"/&gt How are you today?</code><br>
+                    Pronounce "ICP" as abbreviation: <code>&ltsay-as interpret-as="characters"&gtICP&lt/say-as&gt is the abbreviation for Infineon Cloud Platform.</code><br>
+                    Say in other language: <code>I can speak French. &ltlang xml:lang="fr-FR"&gtJe ne parle pas français.&lt/lang&gt</code><br>
+                    Use phonetic alphabet: <code>You say, &ltphoneme alphabet="ipa" ph="pɪˈkɑːn"&gtpecan&lt/phoneme&gt.</code><br>
+                    Some special cases: <code>2 devided by 9 is pronounced &ltsay-as interpret-as="fraction"&gt2/9&lt/say-as&gt.</code><br><br>
+                    For full SSML reference, visit <a href="https://docs.aws.amazon.com/polly/latest/dg/supportedtags.html" target="_blank">AWS Polly Supported SSML Tags</a>
+
+            </details>
+            </li>
+        <li>Place the cursor on any line and press the "Play current line" button, or use ALT-P to hear how the single phrase sounds.</li>
+    </ol>
+    </details>
+</div>
