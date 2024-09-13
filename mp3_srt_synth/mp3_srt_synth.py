@@ -86,7 +86,6 @@ class Mp3SrtSynth:
                 "Bianca", "Adriano",
                 "Zhiyu",
                 "Kazuha", "Takumi", "Tomoko",
-                "Maxim", "Tatyana",
                 'Lucia', 'Sergio', 'Ola',
                 'Ines',
                 'Hala', 'Zayd',
