@@ -14,44 +14,90 @@ class Mp3SrtSynth:
         'EN': 'en-US',
         'DE': 'de-DE',
         'FR': 'fr-FR',
-        # 'ES': 'es-ES',
+        'ES': 'es-ES',
         'IT': 'it-IT',
-        # 'PL': 'pl-PL',
-        # 'PT': 'pt-PT',
+        'PL': 'pl-PL',
+        'PT': 'pt-PT',
         'RU': 'ru-RU',
         'JA': 'ja-JP',
         'ZH': 'cmn-CN',
+        'AR': 'ar-AE',
+        'NL': 'nl-NL',
+        'CS': 'cs-CZ',
+        'DA': 'da-DK',
+        'FI': 'fi-FI',
+        'KO': 'ko-KR',
+        'NB': 'nb-NO',
+        'SV': 'sv-SE',
+        'TR': 'tr-TR'
     }
 
     lang_code_to_name = {
         'EN': 'English',
         'DE': 'Deutsch',
         'FR': 'Français',
-        # 'ES': 'Español',
+        'ES': 'Español',
         'IT': 'Italiano',
-        # 'PL': 'Polski',
-        # 'PT': 'Português'
+        'PL': 'Polski',
+        'PT': 'Português',
         'RU': 'Русский',
         'JA': 'Japanese',
         'ZH': 'Chinese',
+        'AR': 'Arabic (Gulf)',
+        'NL': 'Dutch',
+        'CS': 'Czech',
+        'DA': 'Danish',
+        'FI': 'Finnish',
+        'KO': 'Korean',
+        'NB': 'Norwegian',
+        'SV': 'Swedish',
+        'TR': 'Turkish'
+
     }
 
     voices = {
-        "EN": ["Matthew", "Joey", "Joanna", "Kendra"],
+        "EN": ['Danielle', 'Gregory', 'Ivy', 'Joanna*', 'Kendra', 'Kimberly', 'Salli', 'Joey', 'Justin', 'Kevin',
+               'Matthew', 'Ruth', 'Stephen'],
         "DE": ["Daniel", "Vicki"],
         "FR": ["Lea", "Remi"],
         "IT": ["Bianca", "Adriano"],
         "ZH": ["Zhiyu", ],
         "JA": ["Kazuha", "Takumi", "Tomoko"],
         "RU": ["Maxim", "Tatyana"],
+        'ES': ['Lucia', 'Sergio'],
+        'PL': ['Ola'],
+        'PT': ['Ines'],
+        'AR': ['Hala', 'Zayd'],
+        'NL': ['Laura'],
+        'CS': ['Jitka'],
+        'DA': ['Sofie'],
+        'FI': ['Suvi'],
+        'KO': ['Seoyeon'],
+        'NB': ['Ida'],
+        'SV': ['Elin'],
+        'TR': ['Burcu']
+
     }
 
-    neural_voices = ["Matthew", "Joey", "Joanna", "Kendra",
-                     "Daniel", "Vicki",
-                     "Lea", "Remi",
-                     "Bianca", "Adriano",
-                     "Zhiyu",
-                     "Kazuha", "Takumi", "Tomoko"]
+    neural_voices = ['Danielle', 'Gregory', 'Ivy', 'Joanna*', 'Kendra', 'Kimberly', 'Salli', 'Joey', 'Justin', 'Kevin',
+               'Matthew', 'Ruth', 'Stephen',
+                "Daniel", "Vicki",
+                "Lea", "Remi",
+                "Bianca", "Adriano",
+                "Zhiyu",
+                "Kazuha", "Takumi", "Tomoko",
+                "Maxim", "Tatyana",
+                'Lucia', 'Sergio', 'Ola',
+                'Ines',
+                'Hala', 'Zayd',
+                'Laura',
+                'Jitka',
+                'Sofie',
+                'Suvi',
+                'Seoyeon',
+                'Ida',
+                'Elin',
+                'Burcu']
 
     def __init__(self, access_key_id, secret_access_key, region):
         self._access_key_id = access_key_id
