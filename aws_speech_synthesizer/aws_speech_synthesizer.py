@@ -54,14 +54,15 @@ class AwsSpeechSynthesizer:
                 if len(batch_lines) == 1:
                     batch_lines.append("")
                 speech_marks = self._get_batch_speech_marks("\n".join(batch_lines))
-                speech_chunk = self._get_speech_chunk_pcm("\n".join(batch_lines[:-1]))
+                # remove 44 bytes of wav header
+                speech_chunk = self._get_speech_chunk_pcm("\n".join(batch_lines[:-1]))[44:]
                 target_chunk_duration_ms = int(speech_marks[-1]["time"])
                 actual_duration_ms = int(len(bytes(speech_chunk)) * 500 / sample_rate_hz)
                 addition = (target_chunk_duration_ms - actual_duration_ms) * sample_rate_hz
                 if addition > 0:
                     speech_chunk += b'\x00\x00' * int(addition / 1000)
-                    #remove 44 bytes of wav header
-                streams.append(speech_chunk[44:])
+
+                streams.append(speech_chunk)
                 batch_lines = [batch_lines[-1], ]
                 sentence_count = 1
 

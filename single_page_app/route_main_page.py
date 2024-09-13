@@ -27,7 +27,8 @@ def main_page():
 
     elif page.is_action_add_lang():
         page.clear_download_link()
-        page.add_lang(page.get_added_lang())
+        if added_lang := page.get_added_lang():
+            page.add_lang(added_lang)
 
     elif page.is_action_play_current_line():
         try:
